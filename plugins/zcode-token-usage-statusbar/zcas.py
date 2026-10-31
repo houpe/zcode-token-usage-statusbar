@@ -319,16 +319,32 @@ def meta_from_fingerprint(fp, label, note, source="capture"):
             "capturedAt": int(time.time() * 1000)}
 
 
+def account_for_fingerprint(fp):
+    if fp.get("userId"):
+        match = next((meta for meta in account_list()
+                      if meta.get("userId") and meta["userId"] == fp["userId"]), None)
+        if match:
+            return match
+    path = meta_path(fp["emailShortId"])
+    return read_json(path) if path.exists() else None
+
+
 def capture(label, note, overwrite):
     cred, cfg = read_json(credentials_file()), read_json(config_file())
     fp = fingerprint(cred, cfg, default_secret())
     if not fp:
         raise ValueError("无法从当前登录态提取账号指纹（请先在 ZCode 里登录）")
-    if meta_path(fp["emailShortId"]).exists() and not overwrite:
-        return {"meta": read_json(meta_path(fp["emailShortId"])), "created": False}
+    existing = account_for_fingerprint(fp)
+    if existing and not overwrite:
+        return {"meta": existing, "created": False}
     meta = meta_from_fingerprint(fp, label.strip(), note.strip())
+    if existing:
+        meta["id"] = existing["id"]
+        meta["label"] = existing.get("label") or meta["label"]
+        meta["capturedAt"] = existing.get("capturedAt", meta["capturedAt"])
+        meta["updatedAt"] = int(time.time() * 1000)
     save_account(meta, slice_account(cred, cfg))
-    return {"meta": meta, "created": True}
+    return {"meta": meta, "created": not existing}
 
 
 def token_iat(value, secret):
@@ -341,9 +357,10 @@ def token_iat(value, secret):
 def write_back_current():
     cred, cfg = read_json(credentials_file()), read_json(config_file())
     fp = fingerprint(cred, cfg, default_secret())
-    if not fp or not meta_path(fp["emailShortId"]).exists():
+    meta = account_for_fingerprint(fp) if fp else None
+    if not meta:
         return
-    meta, old = load_account(fp["emailShortId"])
+    _, old = load_account(meta["id"])
     if meta.get("userId") and fp["userId"] != meta["userId"]:
         return
     snap = slice_account(cred, cfg)

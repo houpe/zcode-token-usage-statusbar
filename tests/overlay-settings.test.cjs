@@ -813,13 +813,14 @@ function buildHarness(state) {
   return context;
 }
 
-test('settings nav groups six sections under three captions with the active state inline', () => {
+test('settings nav groups seven sections under three captions with the active state inline', () => {
   const html = buildHarness({ settingsSec: 'quota' }).panel.innerHTML;
   assert.match(html, /class="zu-settings-nav" aria-label="设置分区"/);
   for (const cap of ['>基础</div>', '>数据与统计</div>', '>维护</div>']) assert.ok(html.includes(cap), cap);
   assert.match(html, /data-sec="quota" aria-current="page" title="套餐额度"/);
   assert.match(html, /<section class="zu-settings-section" data-sec="quota">/);
   assert.ok(html.includes('<section class="zu-settings-section" data-sec="display" hidden>'));
+  assert.ok(html.includes('<section class="zu-settings-section" data-sec="account" hidden>'));
   assert.ok(html.includes('<section class="zu-settings-section" data-sec="about" hidden>'));
   const en = buildHarness({ settingsSec: 'quota', lang: 'en' }).panel.innerHTML;
   assert.match(en, /aria-label="Settings sections"/);
@@ -837,7 +838,7 @@ test('an unknown stored section falls back to the first section instead of a bla
 test('nav clicks switch the visible section through the delegated handler, persist and reset scroll', () => {
   const clickSource = extract('    panel.addEventListener("click",', '    gear.addEventListener("click"');
   let handler;
-  const ids = ['display', 'general', 'stats', 'quota', 'update', 'about'];
+  const ids = ['display', 'account', 'general', 'stats', 'quota', 'update', 'about'];
   const mk = id => ({
     id, hidden: true, cur: false, dataset: { sec: id },
     getAttribute: k => (k === 'data-sec' ? id : null),
@@ -861,12 +862,12 @@ test('nav clicks switch the visible section through the delegated handler, persi
     activeSettingsSec: () => context.state.settingsSec,
   };
   vm.runInNewContext(clickSource, context);
-  const quota = items[3];
+  const quota = items[4];
   handler({ target: { closest: sel => (sel === '.zu-navitem' ? quota : null) } });
   assert.equal(context.state.settingsSec, 'quota');
   assert.equal(context.saved, 1);
-  assert.deepEqual(sections.map(s => !s.hidden), [false, false, false, true, false, false]);
-  assert.deepEqual(items.map(b => b.cur), [false, false, false, true, false, false]);
+  assert.deepEqual(sections.map(s => !s.hidden), [false, false, false, false, true, false, false]);
+  assert.deepEqual(items.map(b => b.cur), [false, false, false, false, true, false, false]);
   assert.equal(body.scrollTop, 0);
   assert.equal(context.synced, 1);
   handler({ target: { closest: sel => (sel === '.zu-navitem' ? quota : null) } });   // 重复点击当前分区：不重置滚动

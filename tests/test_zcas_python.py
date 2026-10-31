@@ -38,8 +38,11 @@ class ZcasPythonTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def write_live(self, user_id="user-1001"):
+        return self.write_live_email(user_id, "user@example.com")
+
+    def write_live_email(self, user_id, email):
         cred = {"oauth:active_provider": "zai",
-                "oauth:zai:user_info": json.dumps({"id": user_id, "email": "user@example.com", "name": "User"}),
+                "oauth:zai:user_info": json.dumps({"id": user_id, "email": email, "name": "User"}),
                 "oauth:zai:access_token": fake_jwt(user_id), "zcodejwttoken": fake_jwt(user_id)}
         cfg = {"provider": {"builtin:zai-coding-plan": {
             "enabled": True, "models": {"glm": {}}, "options": {"apiKey": fake_jwt(user_id)}}}}
@@ -92,6 +95,37 @@ class ZcasPythonTest(unittest.TestCase):
             switched = zcas.read_json(zcas.config_file())
             self.assertEqual(switched["editor"]["fontSize"], 14)
             self.assertEqual(result["account"]["id"], new["meta"]["id"])
+
+    def test_switch_backs_up_account_when_email_identity_changes(self):
+        with mock.patch.dict("os.environ", self.env):
+            self.write_live_email("user-old", "old@example.com")
+            old = zcas.capture("Old", "", True)
+            self.write_live("user-new")
+            new = zcas.capture("New", "", True)
+            self.write_live_email("user-old", "")
+            self.assertNotEqual(zcas.fingerprint(
+                zcas.read_json(zcas.credentials_file()),
+                zcas.read_json(zcas.config_file()), "test-secret"
+            )["emailShortId"], old["meta"]["id"])
+            with mock.patch.object(zcas, "is_zcode_running", return_value=False), \
+                 mock.patch.object(zcas, "kill_zcode"), mock.patch.object(zcas, "launch_zcode"):
+                zcas.switch_account(new["meta"]["id"], restart=False)
+
+            state = zcas.current_account_state()
+            self.assertEqual(len(state["accounts"]), 2)
+            self.assertIn(old["meta"]["id"], [item["id"] for item in state["accounts"]])
+            meta, _ = zcas.load_account(old["meta"]["id"])
+            self.assertEqual(meta["userId"], "user-old")
+            _, old_snap = zcas.load_account(old["meta"]["id"])
+            self.assertEqual(old_snap["credentialFields"]["oauth:zai:user_info"],
+                             json.dumps({"id": "user-old", "email": "", "name": "User"}))
+
+            with mock.patch.object(zcas, "is_zcode_running", return_value=False), \
+                 mock.patch.object(zcas, "kill_zcode"), mock.patch.object(zcas, "launch_zcode"):
+                result = zcas.switch_account(old["meta"]["id"], restart=False)
+            self.assertEqual(result["account"]["id"], old["meta"]["id"])
+            profile = json.loads(zcas.read_json(zcas.credentials_file())["oauth:zai:user_info"])
+            self.assertEqual(profile["id"], "user-old")
 
     def test_macos_restart_opens_zcode_in_foreground(self):
         calls = []

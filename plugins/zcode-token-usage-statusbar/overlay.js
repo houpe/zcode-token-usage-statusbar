@@ -73,7 +73,7 @@
   } catch (e) { }
 
   /* ---------- 共享状态（多实例一致）：显示项/语言/上下文覆盖/最近一次数据 ---------- */
-  var LS = { show: "zusage3.show", ctxOv: "zusage3.ctxOv", lang: "zusage3.lang", cnNum: "zusage3.cnNum", sec: "zusage3.sec", rstCdh: "zusage3.rstCdh", projPath: "zusage3.projPath", theme: "zusage3.theme", ctxEnh: "zusage3.ctxEnh", cmdkW: "zusage3.cmdkW", updSeen: "zusage3.updSeen", forceKmb: "zusage3.forceKmb", ctxCpt: "zusage3.ctxCpt" };
+  var LS = { show: "zusage3.show", ctxOv: "zusage3.ctxOv", lang: "zusage3.lang", cnNum: "zusage3.cnNum", sec: "zusage3.sec", rstCdh: "zusage3.rstCdh", projPath: "zusage3.projPath", theme: "zusage3.theme", ctxEnh: "zusage3.ctxEnh", cmdkW: "zusage3.cmdkW", updSeen: "zusage3.updSeen", forceKmb: "zusage3.forceKmb", ctxCpt: "zusage3.ctxCpt", accountUi: "zusage3.accountUi" };
   var state = {
     show: { win: 1, turn: 1, today: 1, sub: 1, tools: 1, git: 1, proj: 1, subRate: 1 },   // git：工具行 Git 状态 chip（v96，默认开）；proj：项目累计格（v159，默认开；与 zusage3.projPath 弹窗路径开关无关）；subRate：Agent 行内子代理速率 chip（v178，默认开；只门控行内展示，槽位估算与主 chip 合计不受影响）
     ctxOv: "", data: null,
@@ -115,6 +115,8 @@
     /* 阶段 3 多源配置列表（id/label/enabled/keyConfigured/status...，主进程 sourcesConfig 推送） */
     quotaSources: (window.__zusagePluginState && Array.isArray(window.__zusagePluginState.quotaSources)
       ? window.__zusagePluginState.quotaSources : []),
+    /* 账号中心纯渲染端偏好：chip 是否挂状态条、设置页是否显示解绑本机快照按钮 */
+    accountUi: { chip: 1, unbind: 1 },
   };
   /* ---------- i18n（v57）：L(中文, English) 内联双语文案，语言存 localStorage ---------- */
   function L(zh, en) { return state.lang === "en" ? en : zh; }
@@ -198,6 +200,11 @@
     if (cdh0 >= 1 && cdh0 <= 24 * 7) state.resetCdh = cdh0;
     var s1 = ls(LS.sec, "");
     if (s1) state.settingsSec = s1;
+    var accountUi0 = JSON.parse(ls(LS.accountUi, "{}"));
+    if (accountUi0 && typeof accountUi0 === "object") {
+      if (accountUi0.chip === false) state.accountUi.chip = 0;
+      if (accountUi0.unbind === false) state.accountUi.unbind = 0;
+    }
   } catch (e) { }
   var theme0 = ls(LS.theme, "");
   if (theme0 === "pill" || theme0 === "compact") state.theme = theme0;   // v146：精简为第三档（隐藏条、信息上工具行）
@@ -214,6 +221,7 @@
     lsSet(LS.cmdkW, state.cmdkW ? "1" : "0");
     lsSet(LS.rstCdh, String(state.resetCdh));
     lsSet(LS.sec, state.settingsSec);
+    lsSet(LS.accountUi, JSON.stringify(state.accountUi));
   }
 
   /* ---------- 多实例注册表（v61.1）：每个分屏 pane 一个条实例 ---------- */
@@ -2858,6 +2866,8 @@
     var ZU_SECTIONS = [
       { id: "display", group: "basics", zh: "状态条显示", en: "Display items",
         icon: '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>' },
+      { id: "account", group: "basics", zh: "账号中心", en: "Account center",
+        icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' },
       { id: "general", group: "basics", zh: "通用", en: "General",
         icon: '<path d="M4 7h4m5 0h7M4 17h9m5 0h2"/><circle cx="10.5" cy="7" r="2.5"/><circle cx="15.5" cy="17" r="2.5"/>' },
       { id: "stats", group: "data", zh: "回答统计", en: "Reply statistics",
@@ -2912,6 +2922,10 @@
       settingRow('<input type="checkbox" data-k="subRate">', L("子代理行内速率", "Sub-agent row rate"), L("在会话流的 Agent 工具行内实时显示各子代理 tok/s（运行期估算，完成后切换为真实平均速率；悬停看明细）。默认开启。", "Shows each sub-agent's live tok/s inside its Agent tool row (running estimate, actual average after completion; hover for details). On by default.")) +
       settingRow('<input type="checkbox" data-k="git">', L("Git 状态", "Git status"), L("工具行显示当前分支、↑领先 ↓落后与未提交改动（+插入行 -删除行 ?未跟踪）；优先挂在「电脑操作」右侧，缺失时留在左侧操作区末尾；仅本地仓库", "Branch, ↑ahead ↓behind and uncommitted changes (+ins -del ?untracked) in the toolbar; beside Computer Use, or at the end of the left action group when unavailable; local repositories only")) +
       '</div></section>' +
+      '<section class="zu-settings-section" data-sec="account"' + secOpen("account") + '><div class="cap">' + L("账号中心", "Account center") + '</div><div class="zu-settings-card">' +
+      settingRow('<input type="checkbox" class="zu-account-chip-toggle">', L("状态条账号 chip", "Status bar account chip"), L("在状态条显示当前账号；悬停可查看各账号天/周额度并直接切换。", "Show the current account in the status bar; hover to inspect daily/weekly quotas and switch accounts directly.")) +
+      settingRow('<input type="checkbox" class="zu-account-unbind">', L("账号解绑按钮", "Account unbind button"), L("在账号卡片上显示“解绑本机快照”按钮；解绑只删除本机保存的登录快照，不影响线上账号。", "Show the local-snapshot unbind button on account cards; unbinding removes only the locally saved snapshot, not the online account.")) +
+      '</div><div class="zu-account-host" aria-live="polite"></div></section>' +
       '<section class="zu-settings-section" data-sec="general"' + secOpen("general") + '><div class="cap">' + L("通用", "General") + '</div><div class="zu-settings-card">' +
       '<div class="zu-theme-title">' + L("状态条样式", "Status bar style") + '</div>' +
       '<div class="zu-theme-options" role="radiogroup" aria-label="' + L("状态条样式", "Status bar style") + '">' +
@@ -2988,6 +3002,10 @@
       if (cptBox) cptBox.checked = !!state.ctxCpt;
       var cwBox = panel.querySelector(".zu-cmdk-widen");
       if (cwBox) cwBox.checked = !!state.cmdkW;
+      var accountChipBox = panel.querySelector(".zu-account-chip-toggle");
+      if (accountChipBox) accountChipBox.checked = !!(state.accountUi && state.accountUi.chip);
+      var accountUnbindBox = panel.querySelector(".zu-account-unbind");
+      if (accountUnbindBox) accountUnbindBox.checked = !!(state.accountUi && state.accountUi.unbind);
       syncUpdate();
       panel.querySelector(".zu-settings-body").scrollTop = scrollTop;
       if (panel.setAttribute) panel.setAttribute("aria-label", L("状态条设置", "Status bar settings"));
@@ -5362,6 +5380,10 @@
       if (cptBox) cptBox.checked = !!state.ctxCpt;
       var cwBox = panel.querySelector(".zu-cmdk-widen");
       if (cwBox) cwBox.checked = !!state.cmdkW;
+      var accountChipBox = panel.querySelector(".zu-account-chip-toggle");
+      if (accountChipBox) accountChipBox.checked = !!(state.accountUi && state.accountUi.chip);
+      var accountUnbindBox = panel.querySelector(".zu-account-unbind");
+      if (accountUnbindBox) accountUnbindBox.checked = !!(state.accountUi && state.accountUi.unbind);
       syncUpdate();
     }
     var relaunchAckTimer = 0;   /* v177：relaunch 回执超时（正常主进程 300ms 内回 ok；超时≈旧主进程） */
@@ -5383,6 +5405,9 @@
         var navBody = panel.querySelector(".zu-settings-body");
         if (navBody) navBody.scrollTop = 0;
         syncSettingsScroll();
+        if (state.settingsSec === "account" && typeof window.__zusageAccountRefresh === "function") {
+          window.__zusageAccountRefresh();
+        }
         return;
       }
       if (e.target.closest && e.target.closest(".zu-settings-close")) {
@@ -5487,6 +5512,9 @@
       gear.setAttribute("aria-expanded", "true");
       panel.style.height = "";   // v101：重开时按当前分区内容重测高度（开着的期间高度锁死）
       positionSettingsPanel();
+      if (activeSettingsSec() === "account" && typeof window.__zusageAccountRefresh === "function") {
+        window.__zusageAccountRefresh();
+      }
       subPanel.classList.remove("open");   // 两面板同位重叠，互斥打开（v49）
       hideTip(true, "gear-open");   // 移向齿轮的路上可能触发过条目 tooltip，开面板时一并收掉
       var activeNav = panel.querySelector('.zu-navitem[aria-current="page"]');
@@ -5644,6 +5672,13 @@
         state.projPath = t2.checked ? 1 : 0;
         persist();
         applyProjPath();
+        return;
+      }
+      if (t2.classList.contains("zu-account-chip-toggle") || t2.classList.contains("zu-account-unbind")) {
+        var accountKey = t2.classList.contains("zu-account-chip-toggle") ? "chip" : "unbind";
+        state.accountUi[accountKey] = t2.checked ? 1 : 0;
+        persist();
+        if (typeof window.__zusageAccountSetPrefs === "function") window.__zusageAccountSetPrefs(state.accountUi);
         return;
       }
       if (t2.classList.contains("zu-ctx-enh")) {

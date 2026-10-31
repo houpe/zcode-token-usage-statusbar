@@ -5,9 +5,11 @@
   if (window.__zusageAccountDispose) window.__zusageAccountDispose();
 
   var state = { current: null, accounts: [], hasLastBackup: false };
+  var prefs = readPrefs();
   var quotas = {};
   var panel = null, anchor = null, busy = false, oauth = null, captureOpen = false;
   var chips = [];
+  var closeTimer = 0, pinned = false;
   var ICONS = {
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
@@ -16,6 +18,7 @@
     save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
     refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 9m2 6a7 7 0 0 0 12 2.5l2-2.5"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
   };
 
   function el(tag, className, text) {
@@ -36,6 +39,17 @@
     var button = el("button", "zcas-command " + (className || ""), text);
     button.type = "button";
     return button;
+  }
+  function readPrefs() {
+    var result = { chip: true, unbind: true };
+    try {
+      var raw = JSON.parse(localStorage.getItem("zusage3.accountUi") || "{}");
+      if (raw && typeof raw === "object") {
+        if (raw.chip === false) result.chip = false;
+        if (raw.unbind === false) result.unbind = false;
+      }
+    } catch (error) { }
+    return result;
   }
   function request(action, extra) {
     return new Promise(function (resolve, reject) {
@@ -96,9 +110,10 @@ function quotaBlock(quota, className) {
     var style = el("style");
     style.textContent =
       ".zusage-account-chip{display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;height:24px;max-width:142px;padding:0 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;cursor:pointer;flex:0 0 auto}" +
+      ".zusage-account-chip[hidden]{display:none!important}" +
       ".zusage-account-chip:hover,.zusage-account-chip[aria-expanded=true]{background:var(--color-background-hover,rgba(127,127,127,.12))}" +
       ".zusage-account-chip svg{width:14px;height:14px;flex:0 0 auto}.zusage-account-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
-      ".zusage-account-panel{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(520px,calc(100vw - 16px));max-height:min(720px,calc(100vh - 16px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--color-popover-border,var(--color-border,rgba(127,127,127,.2)));border-radius:8px;background:var(--color-popover,#16181d);color:var(--color-popover-foreground,var(--color-foreground,#f3f4f6));box-shadow:0 18px 48px rgba(0,0,0,.34);font:13px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0}" +
+      ".zusage-account-panel{position:fixed;z-index:2147483000;box-sizing:border-box;width:min(430px,calc(100vw - 16px));max-height:min(560px,calc(100vh - 16px));display:none;flex-direction:column;overflow:hidden;border:1px solid var(--color-popover-border,var(--color-border,rgba(127,127,127,.2)));border-radius:8px;background:var(--color-popover,#16181d);color:var(--color-popover-foreground,var(--color-foreground,#f3f4f6));box-shadow:0 18px 48px rgba(0,0,0,.34);font:13px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0}" +
       ".zusage-account-panel.zcas-open{display:flex}.zusage-account-panel *{box-sizing:border-box;letter-spacing:0}" +
       ".zcas-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--color-border,rgba(127,127,127,.2));background:var(--color-card,rgba(127,127,127,.04))}.zcas-head strong{font-size:14px;font-weight:650;flex:1}.zcas-head svg{width:16px;height:16px}" +
       ".zcas-body{overflow:auto;min-height:0;padding:12px 14px;scrollbar-width:thin;scrollbar-color:var(--color-foreground-subtlest,#6b7280) transparent}" +
@@ -119,8 +134,13 @@ function quotaBlock(quota, className) {
       ".zcas-form-row{display:flex;gap:8px;justify-content:flex-end}.zcas-form-note{margin:0;color:var(--color-foreground-subtle,#a7adb8);font-size:12px}" +
       ".zcas-status{min-height:20px;padding:0 16px 8px;color:var(--color-foreground-subtle,#b4bac5);font-size:12px}.zcas-status[data-error=true]{color:#f0a35e}" +
       ".zcas-foot{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--color-border,rgba(127,127,127,.2));color:var(--color-foreground-subtle,#a7adb8);font-size:12px}.zcas-foot span{flex:1}" +
+      ".zu-account-host{display:block;width:100%}.zu-account-host .zcas-content{padding:4px 12px 12px}.zu-account-host .zcas-actions{padding-top:8px}" +
       "@media(max-width:520px){.zusage-account-panel{width:calc(100vw - 16px)}.zcas-account{align-items:flex-start;flex-wrap:wrap}.zcas-account-actions{width:100%;justify-content:flex-end}.zusage-account-chip{max-width:108px}}";
     panel.appendChild(style);
+    var body = el("div", "zcas-body");
+    var status = el("div", "zcas-status");
+    status.setAttribute("aria-live", "polite");
+    panel.append(body, status);
     document.body.appendChild(panel);
     return panel;
   }
@@ -133,11 +153,14 @@ function quotaBlock(quota, className) {
       // childList 观察器会被 textContent 的子节点替换再次触发；同值不写，阻断自激循环。
       if (text.textContent !== label) text.textContent = label;
       chip.title = state.current ? "账号中心 · " + label : "账号中心 · 保存或添加账号";
+      chip.hidden = !prefs.chip;
     });
   }
 
   function closePanel() {
     if (!panel) return;
+    pinned = false;
+    cancelClose();
     panel.classList.remove("zcas-open");
     if (anchor) anchor.setAttribute("aria-expanded", "false");
     anchor = null;
@@ -153,50 +176,71 @@ function quotaBlock(quota, className) {
   }
 
   function setStatus(message, error) {
-    if (!panel) return;
-    var node = panel.querySelector(".zcas-status");
-    node.textContent = message || "";
-    node.dataset.error = error ? "true" : "false";
+    document.querySelectorAll(".zcas-status").forEach(function (node) {
+      node.textContent = message || "";
+      node.dataset.error = error ? "true" : "false";
+    });
   }
 
   function setBusy(value) {
     busy = value;
-    if (panel) panel.querySelectorAll("button,input,select,textarea").forEach(function (node) {
+    document.querySelectorAll(".zcas-content button,.zcas-content input,.zcas-content select,.zcas-content textarea").forEach(function (node) {
       node.disabled = value || node.dataset.alwaysDisabled === "true";
     });
   }
 
-  function render() {
-    renderChips();
-    if (!panel || !panel.classList.contains("zcas-open")) return;
-    panel.querySelectorAll(".zcas-content").forEach(function (node) { node.remove(); });
-    var body = panel.querySelector(".zcas-body");
+  function renderContainer(container, mode) {
+    var previousStatus = container.querySelector(".zcas-status");
+    previousStatus = previousStatus ? previousStatus.textContent : "";
     var content = el("div", "zcas-content");
-
-    var actions = el("div", "zcas-actions");
-    var save = iconButton("save", "保存当前");
-    save.onclick = function () { captureOpen = !captureOpen; oauth = null; render(); };
-    var add = iconButton("plus", "添加账号");
-    add.onclick = function () { oauth = { accountId: "", provider: "zai", started: false }; captureOpen = false; render(); };
-    var spacer = el("span", "zcas-spacer");
-    var refresh = iconButton("refresh", "刷新全部额度");
-    refresh.onclick = function () { refreshQuotas(); };
-    actions.append(save, add, spacer, refresh);
-    content.appendChild(actions);
-
-    if (captureOpen) content.appendChild(captureForm());
-    if (oauth) content.appendChild(oauthForm());
-
-    if (!state.accounts.length && !captureOpen && !oauth) content.appendChild(el("div", "zcas-empty", "还没有保存的账号"));
-    state.accounts.forEach(function (account) { content.appendChild(accountRow(account)); });
-    body.appendChild(content);
-    var foot = panel.querySelector(".zcas-foot span");
-    foot.textContent = state.accounts.length + " 个账号 · 数据仅在本机处理";
-    panel.querySelector(".zcas-rollback").hidden = !state.hasLastBackup;
+    if (mode === "settings") {
+      var actions = el("div", "zcas-actions");
+      var save = iconButton("save", "保存当前");
+      save.onclick = function () { captureOpen = !captureOpen; oauth = null; render(); };
+      var add = iconButton("plus", "添加账号");
+      add.onclick = function () { oauth = { accountId: "", provider: "zai", started: false }; captureOpen = false; render(); };
+      var spacer = el("span", "zcas-spacer");
+      var refresh = iconButton("refresh", "刷新全部额度");
+      refresh.onclick = function () { refreshQuotas(); };
+      actions.append(save, add, spacer, refresh);
+      content.appendChild(actions);
+      if (captureOpen) content.appendChild(captureForm());
+      if (oauth) content.appendChild(oauthForm());
+    }
+    if (!state.accounts.length && !(mode === "settings" && (captureOpen || oauth))) {
+      content.appendChild(el("div", "zcas-empty", "还没有保存的账号"));
+    }
+    state.accounts.forEach(function (account) { content.appendChild(accountRow(account, mode)); });
+    if (mode === "settings") {
+      var status = el("div", "zcas-status");
+      status.setAttribute("aria-live", "polite");
+      status.textContent = previousStatus;
+      var foot = el("div", "zcas-foot");
+      foot.appendChild(el("span", "", state.accounts.length + " 个账号 · 数据仅在本机处理"));
+      var rollback = command("回滚上次切换", "zcas-rollback");
+      rollback.hidden = !state.hasLastBackup;
+      rollback.onclick = function () {
+        if (!window.confirm("回滚会恢复切换前的登录态并重启 ZCode。确定继续吗？")) return;
+        setBusy(true); setStatus("正在回滚并重启 ZCode…");
+        request("account-rollback").catch(function (error) { setBusy(false); setStatus(error.message, true); });
+      };
+      foot.appendChild(rollback);
+      content.append(status, foot);
+    }
+    container.textContent = "";
+    container.appendChild(content);
     setBusy(busy);
   }
 
-  function accountRow(account) {
+  function render() {
+    renderChips();
+    document.querySelectorAll(".zu-account-host").forEach(function (host) { renderContainer(host, "settings"); });
+    if (panel && panel.classList.contains("zcas-open")) {
+      renderContainer(panel.querySelector(".zcas-body"), "hover");
+    }
+  }
+
+  function accountRow(account, mode) {
     var row = el("div", "zcas-account");
     var main = el("div", "zcas-account-main");
     var name = el("div", "zcas-name", account.label || account.email || "账号");
@@ -218,9 +262,24 @@ function quotaBlock(quota, className) {
         setStatus("切换已启动，ZCode 即将重启…");
       }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
     };
-    var reauth = iconButton("key", "重新授权");
-    reauth.onclick = function () { oauth = { accountId: account.id, provider: account.provider, started: false }; captureOpen = false; render(); };
-    actions.append(use, reauth);
+    actions.appendChild(use);
+    if (mode === "settings") {
+      var reauth = iconButton("key", "重新授权");
+      reauth.onclick = function () { oauth = { accountId: account.id, provider: account.provider, started: false }; captureOpen = false; render(); };
+      actions.appendChild(reauth);
+      if (prefs.unbind) {
+        var unbind = iconButton("trash", "解绑本机快照");
+        unbind.dataset.alwaysDisabled = isCurrent ? "true" : "false";
+        unbind.onclick = function () {
+          if (!window.confirm("解绑只删除本机保存的「" + account.label + "」登录快照，不影响线上账号。确定继续吗？")) return;
+          setBusy(true); setStatus("正在解绑本机快照…");
+          request("account-delete", { accountId: account.id }).then(function () {
+            setBusy(false); setStatus("本机快照已解绑"); return loadState(false);
+          }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
+        };
+        actions.appendChild(unbind);
+      }
+    }
     row.append(main, actions);
     return row;
   }
@@ -322,30 +381,27 @@ function quotaBlock(quota, className) {
     }).catch(function (error) { setStatus(error.message, true); });
   }
 
+  function cancelClose() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = 0;
+    }
+  }
+  function scheduleClose() {
+    cancelClose();
+    closeTimer = setTimeout(function () {
+      closeTimer = 0;
+      closePanel();
+    }, 220);
+  }
   function openPanel(chip) {
+    if (document.querySelector(".zusage-panel.zu-settings.open")) return;
     ensurePanel();
-    if (anchor === chip && panel.classList.contains("zcas-open")) { closePanel(); return; }
+    cancelClose();
+    pinned = false;
     if (anchor) anchor.setAttribute("aria-expanded", "false");
     anchor = chip;
     anchor.setAttribute("aria-expanded", "true");
-    if (!panel.querySelector(".zcas-head")) {
-      var head = el("div", "zcas-head");
-      head.appendChild(el("strong", "", "账号中心"));
-      var close = iconButton("close", "关闭账号中心"); close.onclick = closePanel;
-      head.appendChild(close);
-      var body = el("div", "zcas-body");
-      var status = el("div", "zcas-status"); status.setAttribute("aria-live", "polite");
-      var foot = el("div", "zcas-foot");
-      foot.appendChild(el("span"));
-      var rollback = command("回滚上次切换", "zcas-rollback");
-      rollback.onclick = function () {
-        if (!window.confirm("回滚会恢复切换前的登录态并重启 ZCode。确定继续吗？")) return;
-        setBusy(true); setStatus("正在回滚并重启 ZCode…");
-        request("account-rollback").catch(function (error) { setBusy(false); setStatus(error.message, true); });
-      };
-      foot.appendChild(rollback);
-      panel.append(head, body, status, foot);
-    }
     panel.classList.add("zcas-open");
     positionPanel(); render(); loadState(true);
   }
@@ -354,9 +410,15 @@ function quotaBlock(quota, className) {
     var chip = el("button", "zusage-account-chip");
     chip.type = "button";
     chip.setAttribute("aria-expanded", "false");
+    chip.setAttribute("aria-haspopup", "dialog");
+    chip.hidden = !prefs.chip;
     chip.innerHTML = ICONS.user;
     chip.appendChild(el("span", "", state.current && state.current.label || "账号"));
-    chip.onclick = function () { openPanel(chip); };
+    chip.addEventListener("pointerenter", function () { openPanel(chip); });
+    chip.addEventListener("pointerleave", function () { if (!pinned) scheduleClose(); });
+    chip.addEventListener("focus", function () { openPanel(chip); });
+    chip.addEventListener("blur", function () { if (!pinned) scheduleClose(); });
+    chip.onclick = function () { pinned = true; openPanel(chip); };
     chips.push(chip);
     return chip;
   }
@@ -364,6 +426,12 @@ function quotaBlock(quota, className) {
   function mount() {
     if (panel && !panel.isConnected) panel = null;
     chips = chips.filter(function (chip) { return chip.isConnected; });
+    document.querySelectorAll(".zu-account-host").forEach(function (host) {
+      if (host.__zcasReady) return;
+      host.__zcasReady = true;
+      render();
+      loadState(false);
+    });
     document.querySelectorAll(".zusage-root").forEach(function (root) {
       if (root.querySelector(":scope > .zusage-account-chip")) return;
       root.appendChild(createChip());
@@ -375,7 +443,8 @@ function quotaBlock(quota, className) {
   function isAccountMutation(mutation) {
     var node = mutation.target;
     while (node && node !== document.documentElement) {
-      if (node === panel || (node.classList && node.classList.contains("zusage-account-chip"))) return true;
+      if (node === panel || (node.classList && (node.classList.contains("zusage-account-chip") ||
+          node.classList.contains("zu-account-host") || node.classList.contains("zcas-content")))) return true;
       node = node.parentElement;
     }
     return false;
@@ -421,6 +490,28 @@ function quotaBlock(quota, className) {
     closePanel();
   }
   function keydown(event) { if (event.key === "Escape") closePanel(); }
+  function panelPointerEnter() { cancelClose(); }
+  function panelPointerLeave() { if (!pinned) scheduleClose(); }
+  function syncPrefsFromStorage(event) {
+    if (!event || event.key !== "zusage3.accountUi") return;
+    prefs = readPrefs();
+    applyPrefs();
+  }
+  function applyPrefs() {
+    renderChips();
+    if (!prefs.chip) closePanel();
+    render();
+  }
+  window.__zusageAccountSetPrefs = function (next) {
+    prefs = { chip: !(next && next.chip === false), unbind: !(next && next.unbind === false) };
+    applyPrefs();
+  };
+  window.__zusageAccountRefresh = function () {
+    return loadState(true);
+  };
+  panel.addEventListener("pointerenter", panelPointerEnter);
+  panel.addEventListener("pointerleave", panelPointerLeave);
+  window.addEventListener("storage", syncPrefsFromStorage);
   document.addEventListener("pointerdown", outside, true);
   document.addEventListener("keydown", keydown, true);
   window.addEventListener("resize", positionPanel);
@@ -430,9 +521,16 @@ function quotaBlock(quota, className) {
     document.removeEventListener("pointerdown", outside, true);
     document.removeEventListener("keydown", keydown, true);
     window.removeEventListener("resize", positionPanel);
+    window.removeEventListener("storage", syncPrefsFromStorage);
+    if (panel) {
+      panel.removeEventListener("pointerenter", panelPointerEnter);
+      panel.removeEventListener("pointerleave", panelPointerLeave);
+    }
     chips.forEach(function (chip) { chip.remove(); });
     if (panel) panel.remove();
     panel = null;
+    delete window.__zusageAccountSetPrefs;
+    delete window.__zusageAccountRefresh;
     delete window.__zusageAccountDispose;
   };
   ensurePanel();   // 样式随隐藏面板先挂载，避免入口首次出现时使用 SVG 默认尺寸。
