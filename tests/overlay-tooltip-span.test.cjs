@@ -12,12 +12,16 @@ const helpers = source.slice(source.indexOf('    function fmtStart('), source.in
 const bandHelpers = source.slice(source.indexOf('  var TPS_BANDS = ['), source.indexOf('  /* 返回 null = 调用方应把这当成'));
 
 function render(data, lang = 'zh', live = null, show = null) {
+  class FrozenDate extends Date {
+    static now() { return ((data.last && data.last.endedAt) || 0) + 500; }
+  }
   const context = vm.createContext({
     state: { lang, show: { turn: true, win: true, today: true, ...(show || {}) } },
     L: (zh, en) => lang === 'en' ? en : zh,
     fmt: value => String(value || 0), countFmt: value => String(value || 0), sec: value => String(value || 0),
     cachePct: () => '', shrink: false, liveStatsCur: live, bridge: { handle: null },
     subRate: { rate: null, at: 0 },   // v97：html 里子代理估算桥引用（值本身被 zuBarSpeedView stub 吞掉）
+    Date: FrozenDate,
     zuBarSpeedView: value => value, zuIcoThinking: () => '<svg/>',
   });
   vm.runInContext(bandHelpers, context);

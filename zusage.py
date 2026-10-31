@@ -23,7 +23,7 @@ CONFIG_PATH = Path(__file__).parent / "config.json"
 
 
 def load_config():
-    cfg = {"context_window": 128000, "poll_ms": 2000}
+    cfg = {"context_window": 128000, "poll_ms": 500}
     if CONFIG_PATH.exists():
         try:
             cfg.update(json.loads(CONFIG_PATH.read_text(encoding="utf-8")))

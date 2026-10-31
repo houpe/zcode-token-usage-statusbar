@@ -346,7 +346,7 @@ class PluginRuntimeTests(unittest.TestCase):
             elif destination.name == notice.MARKER:
                 marker = json.loads(source.read_text(encoding="utf-8"))
                 # quota-client.cjs（v95）与 model-puller.cjs（v129，主进程 require）同属需完全重启的冷文件
-                self.assertEqual(set(marker["hashes"]), {"inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs"})
+                self.assertEqual(set(marker["hashes"]), {"inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs", "account-center.cjs"})
                 self.assertFalse(any((self.runtime / name).exists() for name in installer.RUNTIME_FILES))
             elif destination.name == "plugin-runtime-pending.json":
                 self.assertEqual(set(json.loads(source.read_text())["targets"]), set(installer.RUNTIME_FILES))
@@ -1102,7 +1102,7 @@ process.stdout.write("ready\n");
 process.stdin.once("data", async () => {
   try {
     hot.fn(); await new Promise(resolve => setImmediate(resolve));
-    assert.ok(injected.some(src => src.endsWith("globalThis.overlayRevision = 2;") && src.includes("__zusageDispose")), "actual loader did not re-inject changed overlay after cleanup");
+    assert.ok(injected.some(src => src.includes("globalThis.overlayRevision = 2;") && src.includes("__zusageDispose")), "actual loader did not re-inject changed overlay after cleanup");
     assert.equal(killed, 1, "actual loader did not restart changed resident Python");
     console.log(JSON.stringify({ overlayReloaded: true, pythonRestarted: true }));
   } catch (e) { console.error(e); process.exitCode = 1; }

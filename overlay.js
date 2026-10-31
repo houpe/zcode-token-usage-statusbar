@@ -332,6 +332,7 @@
     window.__zusagePluginRequests.push(o);
     return o.requestId || "";
   }
+  window.__zusagePluginRequest = pluginRequest;
   window.__zusagePluginResult = function (result) {
     if (!result || typeof result.id !== "string") return;
     var done = pluginRequestCallbacks[result.id];
@@ -3381,7 +3382,7 @@
        * zuBarSpeedView 对"刚绑定/重绑时捞到的历史存量已完成轮次"返回 null——这种情况
        * 和"桥完全没命中"一视同仁，同样回退 DB/不渲染，不冒充"这个会话速度不可用"。
        * 二者互斥：绝不同时渲染两枚「速度」chip。 */
-      var dbTps = last.tps || 0;
+      var dbTps = (!last.endedAt || Date.now() - last.endedAt <= 1000) ? (last.tps || 0) : 0;
       var sessAvg = (sess && typeof sess.avg_tps === "number" && isFinite(sess.avg_tps) && sess.avg_tps > 0) ? sess.avg_tps : 0;
       var speedView = liveStatsCur ? zuBarSpeedView(liveStatsCur, bridge.handle && bridge.handle.charsPerToken, subRate.sum, sessAvg) : null;
       if (speedView) {
@@ -4257,6 +4258,10 @@
             }
           }
         } catch (e) { }
+      }
+      if (stats && stats.complete) {
+        stats.__doneAt = stats.__doneAt || Date.now();
+        if (Date.now() - stats.__doneAt > 800) stats = null;   // 停止后不再把旧运行估算当实时值。
       }
       if (h && stats && stats.complete && stats.outputTokens > 0 && stats.totalCharacters > 0) {
         h.charsPerToken = stats.totalCharacters / stats.outputTokens;   // c2t 自校准：本轮真实比例供下一轮估算用
@@ -6522,7 +6527,8 @@
         livePhaseCur = sv.phase || "";
         return { kind: "live", sv: sv };
       }
-      var dbTps = lastView && lastView.last ? lastView.last.tps : 0;
+      var last = lastView && lastView.last ? lastView.last : {};
+      var dbTps = (!last.endedAt || Date.now() - last.endedAt <= 1000) ? (last.tps || 0) : 0;
       if ((cAvg || dbTps) && isFinite(cAvg || dbTps) && (cAvg || dbTps) > 0) {
         liveKindCur = "fallback";
         livePhaseCur = "";

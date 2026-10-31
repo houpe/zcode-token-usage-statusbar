@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>Account center fixture</title>
+<style>
+  body{margin:0;background:#111316;color:#eee;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .toolbar{display:flex;align-items:center;gap:8px;margin:280px 40px 40px;padding:14px;background:#242629;border-radius:8px}
+  .zu-tsb{padding:4px 8px}.zusage-root{display:flex;padding:8px}
+</style>
+<body>
+  <div class="toolbar"><span class="zu-tsb">均74.1 t/s · 近56.9</span></div>
+  <div class="zusage-root" hidden></div>
+  <script>
+    window.__zusagePluginRequest = function (action, extra, done) {
+      const accounts = [
+        { id: "acct1", label: "侯鹏", provider: "builtin:bigmodel-start-plan", shortId: "14451781" },
+        { id: "acct2", label: "备用账号", provider: "builtin:bigmodel-coding-plan", shortId: "75971792" },
+      ];
+      const quota = { codingPlan: { limits: [{ name: "每5小时", percent: 27 }, { name: "每周", percent: 60 }] } };
+      let result = { ok: true };
+      if (action === "account-state") Object.assign(result, { current: { label: "葱子脚脚", provider: "builtin:bigmodel-start-plan", savedId: "acct1" }, accounts, hasLastBackup: true });
+      if (action === "account-quota") result.quota = quota;
+      setTimeout(() => done(result), 0);
+    };
+  </script>
+  <script src="../account-center.js"></script>
+  <script>
+    if (location.search.includes("open")) {
+      setTimeout(() => document.querySelector(".zusage-account-chip")?.click(), 0);
+    }
+  </script>
+</body>
+</html>

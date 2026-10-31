@@ -1,6 +1,6 @@
 {
   "python_path": "C:\\path\\to\\python.exe",
-  "activity_min_ms": 1500,
+  "activity_min_ms": 500,
   "heartbeat_ms": 30000,
   "diag": true,
   "answer_rate_line": true,

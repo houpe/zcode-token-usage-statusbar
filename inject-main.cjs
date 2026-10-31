@@ -3,7 +3,7 @@
  * 职责：1) 向每个窗口注入 turn-stats.js + overlay.js（前者先注入：renderer 会话
  *          store 的只读投影统计，overlay 读 globalThis.ZUsageTurnStats；mtime 热更新）；
  *       2) 触发式拉取：fs.watch 监听 db 目录，db.sqlite/-wal 一有写入（去抖 300ms）就
- *          查询并推送。限频 config.activity_min_ms（默认 1500ms），限频到点
+ *          查询并推送。限频 config.activity_min_ms（默认 500ms），限频到点
  *          自动补拉，最后一笔写入不漏；完全空闲时零进程零轮询，仅兜底心跳
  *          （config.heartbeat_ms，默认 30s）防文件事件丢失（Node 官方文档：fs.watch
  *          事件不保证送达）。任何失败只打日志，不影响客户端。
@@ -25,12 +25,14 @@ const { fileURLToPath } = require("url");
 const HERE = __dirname;   // 本 loader 被 asar 注入行按绝对 file:// URL import，__dirname 即真实目录（克隆到任意路径无需改代码）
 const CONFIG = path.join(HERE, "config.json");
 const OVERLAY = path.join(HERE, "overlay.js");
+const ACCOUNT_OVERLAY = path.join(HERE, "account-center.js");
+const ZCAS = path.join(HERE, "zcas.py");
 const TURN_STATS = path.join(HERE, "turn-stats.js");
 const ZUSAGE = path.join(HERE, "zusage.py");
 const TOKEN_RATE = path.join(HERE, "token_rate.py");
 const LOG = (...a) => console.error("[zusage]", ...a);
 const loadedHashes = { _loadedAt: Date.now() - process.uptime() * 1000 };
-for (const name of ["inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs", "overlay.js", "zusage.py"]) {
+for (const name of ["inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs", "overlay.js", "account-center.js", "account-center.cjs", "zusage.py", "zcas.py"]) {
   try { loadedHashes[name] = createHash("sha256").update(fs.readFileSync(path.join(HERE, name))).digest("hex"); }
   catch (e) { LOG("startup fingerprint unavailable:", name, e.message); }
 }
@@ -82,6 +84,8 @@ let overlaySrc = "";
 let overlayMtime = 0;
 let turnStatsSrc = "";
 let turnStatsMtime = 0;
+let accountOverlaySrc = "";
+let accountOverlayMtime = 0;
 {
   const ov = loadValidatedAsset(OVERLAY);
   if (ov) { overlaySrc = ov.src; overlayMtime = ov.mtime; }
@@ -89,18 +93,22 @@ let turnStatsMtime = 0;
   const ts = loadValidatedAsset(TURN_STATS);
   if (ts) { turnStatsSrc = ts.src; turnStatsMtime = ts.mtime; }
   else LOG("turn-stats.js missing (live/deterministic stats disabled)");
+  const ac = loadValidatedAsset(ACCOUNT_OVERLAY);
+  if (ac) { accountOverlaySrc = ac.src; accountOverlayMtime = ac.mtime; }
+  else LOG("account-center.js missing (account center disabled)");
 }
 
 function hotReloadIfChanged() {
   let changed = false;
-  for (const asset of [{ file: TURN_STATS, srcKey: "turnStats" }, { file: OVERLAY, srcKey: "overlay" }]) {
+  for (const asset of [{ file: TURN_STATS, srcKey: "turnStats" }, { file: OVERLAY, srcKey: "overlay" }, { file: ACCOUNT_OVERLAY, srcKey: "accountOverlay" }]) {
     let m = 0;
     try { m = fs.statSync(asset.file).mtimeMs; } catch (e) { continue; }
-    const known = asset.srcKey === "turnStats" ? turnStatsMtime : overlayMtime;
+    const known = asset.srcKey === "turnStats" ? turnStatsMtime : asset.srcKey === "accountOverlay" ? accountOverlayMtime : overlayMtime;
     if (m === known) continue;   // mtime 未变：不读文件（每 2s 心跳零读盘）
     const loaded = loadValidatedAsset(asset.file);
     if (!loaded) continue;       // 语法没写完：保留旧 mtime，下轮重试
     if (asset.srcKey === "turnStats") { turnStatsMtime = loaded.mtime; turnStatsSrc = loaded.src; }
+    else if (asset.srcKey === "accountOverlay") { accountOverlayMtime = loaded.mtime; accountOverlaySrc = loaded.src; }
     else { overlayMtime = loaded.mtime; overlaySrc = loaded.src; }
     changed = true;
   }
@@ -580,7 +588,7 @@ function maybeSpawn() {
   const st = dbStamp();
   const cfg = readCfgCached();
   if (remoteDisabled()) clearRemoteRecovery();
-  const wait = Math.max(300, cfg.activity_min_ms | 0 || 1500);
+  const wait = Math.max(100, cfg.activity_min_ms | 0 || 500);
   /* 先取各窗口的"当前会话 id"：主进程 IPC 映射（应用自己上报的焦点会话，v6）优先，
    * overlay 从 localStorage 键读出的 __zusageWantSid 兜底；无窗口时直接短路（空闲零进程的
    * 设计意图）；executeJavaScript 挂 1s 超时，防渲染进程卡死导致泵永不 settle。
@@ -701,7 +709,7 @@ function watchDb() {
     dbWatcher = fs.watch(dbDir(), (ev, f) => {
       if (f && !/db\.sqlite/.test(f)) return;
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(maybeSpawn, 300);
+      debounceTimer = setTimeout(maybeSpawn, 100);
     });
     dbWatcher.on("error", () => {
       LOG("db watcher error, re-arm in 5s");
@@ -748,6 +756,15 @@ let enginePatcher = null;   // v179：声明前置——updater createUpdater �
 let pluginRequestBusy = false;
 let lastGoodPayload = null;   // 额度结算后无需重查库即可向各窗口补推（payload 已含 quota）
 let quotaClient = null;
+let accountCenter = null;
+try {
+  const { createAccountCenter } = require("./account-center.cjs");
+  accountCenter = createAccountCenter({
+    command: readCfgCached().python_path,
+    scriptPath: ZCAS,
+    log: (...a) => LOG("[account]", ...a),
+  });
+} catch (e) { LOG("account center unavailable:", e.message); }
 function pushPluginState(wc, state) {
   if (!isMainWindowState(wc) || wc.isDestroyed() || !isLocalHostPage(wc)) return;
   /* rateLine / quotaEnabled / restartNotice / enginePatch 随插件状态一起推送：⚙ 面板开关的真值都来自 config.json */
@@ -1413,6 +1430,15 @@ async function pollPluginRequests() {
           queryTurnText(req.sid, wc, req.cn === 0, req.forceKmb === true, req.unitEpoch);
         } else if (req && req.action === "git-refresh") {   // v96：Git chip 点击 / 快照后节流：立即重查全部已关注路径
           gitTick(true, req.requestId, wc, req.path).catch(() => { });
+        } else if (req && (req.action === "account-use" || req.action === "account-rollback")) {
+          // 切换进程必须独立于 ZCode 存活；先回执，zcas 再关闭并重启客户端。
+          deliverPluginRequest(wc, req.requestId, accountCenter ? accountCenter.restart(req) : { ok: false, error: "zcas unavailable" });
+        } else if (req && typeof req.action === "string" && req.action.startsWith("account-")) {
+          if (!accountCenter) deliverPluginRequest(wc, req.requestId, { ok: false, error: "zcas unavailable" });
+          else accountCenter.handle(req).then(
+            (result) => deliverPluginRequest(wc, req.requestId, result),
+            (error) => deliverPluginRequest(wc, req.requestId, { ok: false, error: String(error && error.message || error) }),
+          );
         } else if (req && req.action === "relaunch") {   // v172：⚙ 更新页「重启 ZCode」按钮（浮层已二次确认）
           if (pluginUpdater && pluginUpdater.status().busy) {   // 更新进行中拒绝重启：quit 会打断下载/安装
             deliverPluginRequest(wc, req.requestId, { ok: false, error: "update in progress" });
@@ -1441,7 +1467,7 @@ function injectOverlay(wc, reload = false) {
   const cleanup = '(function(){if(window.__zusageDispose)window.__zusageDispose();else{document.querySelectorAll(".zusage-root,.zusage-tip-root,.zusage-exc").forEach(function(e){e.remove()});if(window.__zusageRateCleanup)window.__zusageRateCleanup()}window.__zusageOverlay=false;})();\n';
   /* turn-stats.js 先于 overlay.js 注入（IIFE 幂等，重复执行只是重挂 ZUsageTurnStats）：
    * overlay 启动即读取该全局做实时/确定性统计；overlay 缺它时自动降级为 DB 轮询路径。 */
-  wc.executeJavaScript((reload ? cleanup : "") + turnStatsSrc + "\n" + overlaySrc, true).then(() => {
+  wc.executeJavaScript((reload ? cleanup : "") + turnStatsSrc + "\n" + overlaySrc + "\n" + accountOverlaySrc, true).then(() => {
     /* 无条件推送：updater 不可用时也要让面板拿到 rateLine 真值（缺省开） */
     pushPluginState(wc, pluginUpdater ? pluginUpdater.status() : {});
     /* 注入即补推最近一次成功快照（v13）：maybeSpawn 的去重在 wants/db mtime 均未变化时
@@ -1510,5 +1536,6 @@ app.on("before-quit", () => {
   clearTimeout(debounceTimer);
   stopResident();
   if (quotaClient) quotaClient.dispose();
+  if (accountCenter) accountCenter.dispose();
   if (dbWatcher) { try { dbWatcher.close(); } catch (e) { } dbWatcher = null; }
 });

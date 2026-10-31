@@ -293,9 +293,8 @@ test('dispose removes the chip; switching theme to default via setBarTheme remov
   assert.equal(h.chipOf(ui.row), null, 'dispose cleans up the chip');
 });
 
-// v181 补修锁定：会话均下 chip 面文本与 tooltip 的 dbTps 门、时间范围抑制。
-// 注意 zh 文案无尾随空格：L("均")+85.5+L(" t/s · 近")+42 → "均85.5 t/s · 近42"（无结尾 " t/s"）。
-test('session avg + dbTps>0: chip 带「近」尾缀；tooltip 有「最近一段」行、无「时间范围」行', () => {
+// 停止后旧“最近一段”不再伪装成当前速度；会话平均仍保留。
+test('stale dbTps is suppressed after a turn stops; session average remains readable', () => {
   const h = harness(), ui = h.buildComposer('workspace-main', 'sid_main');
   h.inject(); h.boot(); h.tick();
   const p = h.payload({ tps: 42 });
@@ -304,11 +303,11 @@ test('session avg + dbTps>0: chip 带「近」尾缀；tooltip 有「最近一�
   p.recent[0].last.endedAt = 2000;
   h.window.__zusageUpdate(p);
   const chip = h.chipOf(ui.row);
-  assert.equal(chip.innerHTML, '<span class="zu-live ok">均85.5 t/s · 近42</span>');
+  assert.equal(chip.innerHTML, '<span class="zu-live ok">均85.5 t/s</span>');
   chip.listeners.get('mouseenter')[0].call(chip);
   const tip = h.tipEl().innerHTML;
   assert.ok(tip.includes('生成速度 · 会话平均'), 'session-avg header');
-  assert.ok(tip.includes('最近一段') && tip.includes('42 t/s'), 'latest-segment row when dbTps>0');
+  assert.ok(!tip.includes('最近一段') && !tip.includes('42 t/s'), 'old segment must not masquerade as current speed');
   assert.ok(!tip.includes('时间范围'), 'time span suppressed under session-avg header');
 });
 

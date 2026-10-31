@@ -70,7 +70,7 @@ test('hotreload stats before reading and accepts source only after syntax valida
   assert.equal(h.evalCode('overlayMtime'), 1);
   h.setOverlay('window.revision=2;', 2); h.evalCode('hotReloadIfChanged()'); await flush();
   assert.equal(h.evalCode('overlayMtime'), 2);
-  const injection = h.injected.find(s => s.endsWith('window.revision=2;'));
+  const injection = h.injected.find(s => s.includes('window.revision=2;'));
   assert.ok(injection.includes('__zusageDispose'));
   assert.ok(injection.indexOf('__zusageDispose') < injection.indexOf('window.revision=2'));
 });

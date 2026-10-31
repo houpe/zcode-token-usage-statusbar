@@ -46,7 +46,10 @@ from runtime_lock import file_lock, update_config
 RUNTIME_FILES = [
     "inject-main.cjs",
     "overlay.js",
+    "account-center.cjs",
+    "account-center.js",
     "zusage.py",
+    "zcas.py",
     "patch_install.py",
     "install_monitor.py",
     "plugin-updater.cjs",
@@ -612,9 +615,9 @@ def _sync_runtime_locked(runtime, verify=lambda: None):
     result = {"changed": changed, "skipped": skipped, "preserved": preserved,
               "version": version, "plugin_root": plugin_root, "hashes": hashes,
               "restartRecorded": True}
-    cold_files = {"inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs"}
+    cold_files = {"inject-main.cjs", "plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "quota-client.cjs", "model-puller.cjs", "engine-patch.cjs", "account-center.cjs"}
     if (load_runtime_config(runtime) or {}).get("hot_reload") is False:
-        cold_files.update(("overlay.js", "zusage.py"))
+        cold_files.update(("overlay.js", "account-center.js", "zusage.py", "zcas.py"))
     restart_hashes = {name: hashes[name] for name in changed if name in cold_files}
     record = dict(result)
     if downgrade:
