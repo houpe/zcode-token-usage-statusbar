@@ -72,11 +72,19 @@ test("account cards stay compact and expose icon-only actions accessibly", () =>
   assert.doesNotMatch(row, /providerText|account\.shortId/);
   assert.match(row, /iconButton\("switch", isCurrent \? "当前账号" : "切换"\)/);
   assert.match(source, /iconButton\("edit", "重命名"\)/);
+  assert.match(source, /function renameForm\(account\)/);
   assert.match(source, /request\("account-rename", \{ accountId: account\.id, name: next \}\)/);
   assert.match(row, /iconButton\("key", "重新授权"\)/);
   assert.match(source, /iconButton\("save", "保存当前"\)/);
   assert.match(source, /iconButton\("plus", "添加账号"\)/);
   assert.doesNotMatch(source, /Start Plan|Coding Plan/);
+});
+
+test("rename uses an inline form instead of unsupported prompt", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.doesNotMatch(source, /window\.prompt\(/);
+  assert.match(source, /renameId = account\.id; render\(\)/);
+  assert.match(source, /form\.onsubmit = function \(event\) \{ event\.preventDefault\(\); submit\(\); \}/);
 });
 
 test("current badge uses a high-contrast filled treatment", () => {

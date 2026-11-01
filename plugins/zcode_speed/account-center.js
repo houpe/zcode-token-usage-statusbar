@@ -7,7 +7,7 @@
   var state = { current: null, accounts: [], hasLastBackup: false };
   var prefs = readPrefs();
   var quotas = {};
-  var panel = null, anchor = null, busy = false, oauth = null, captureOpen = false, fieldSeq = 0;
+  var panel = null, anchor = null, busy = false, oauth = null, captureOpen = false, fieldSeq = 0, renameId = null;
   var chips = [];
   var closeTimer = 0, pinned = false;
   var ICONS = {
@@ -139,7 +139,7 @@ function quotaBlock(quota, className) {
       ".zcas-empty{padding:16px 0;text-align:center;color:var(--color-foreground-subtle,#a7adb8)}" +
       ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:10px}.zcas-form-title{margin:0;color:var(--color-foreground,#f3f4f6);font-size:13px;font-weight:650}.zcas-fields{display:flex;flex-wrap:wrap;gap:10px}.zcas-field{display:grid;gap:5px;align-content:start;width:180px;min-width:0}.zcas-field-md{width:220px}.zcas-field-wide{width:min(320px,100%)}.zcas-field-label{white-space:nowrap;color:var(--color-foreground-subtle,#b4bac5);font-size:12px;line-height:1.2}" +
       ".zcas-control{display:block;width:100%;border:1px solid var(--color-input-border,rgba(127,127,127,.32));border-radius:6px;background:var(--color-input,#191a1c);color:var(--color-foreground,#f3f4f6);font:inherit;padding:7px 8px;outline:none}.zcas-control.zcas-textarea{min-height:60px;resize:vertical}.zcas-control:focus,.zcas-command:focus-visible,.zcas-icon-btn:focus-visible,.zusage-account-chip:focus-visible{outline:2px solid var(--color-input-border-focused,#8aa4ff);outline-offset:2px}" +
-      ".zcas-form-row{display:flex;gap:8px;justify-content:flex-end}.zcas-form-note{margin:0;color:var(--color-foreground-subtle,#a7adb8);font-size:12px}" +
+      ".zcas-form-row{display:flex;gap:8px;justify-content:flex-end}.zcas-form-note{margin:0;color:var(--color-foreground-subtle,#a7adb8);font-size:12px}.zcas-rename{display:grid;gap:8px}.zcas-rename-row{display:flex;gap:8px;justify-content:flex-end}.zcas-rename-row .zcas-command{min-width:56px}" +
       ".zcas-status{min-height:0;padding:0 10px 6px;color:var(--color-foreground-subtle,#b4bac5);font-size:11px}.zcas-status:empty{display:none}.zcas-status[data-error=true]{color:#f0a35e}" +
       ".zcas-foot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--color-border,rgba(127,127,127,.2));color:var(--color-foreground-subtle,#a7adb8);font-size:11px}.zcas-foot span{flex:1}" +
       ".zu-account-host{display:block;width:100%}.zu-account-host .zcas-content{padding:4px 10px 10px}.zu-account-host .zcas-actions{padding-top:8px}" +
@@ -253,6 +253,7 @@ function quotaBlock(quota, className) {
   }
 
   function accountRow(account, mode) {
+    if (renameId === account.id) return renameForm(account);
     var row = el("div", "zcas-account");
     var main = el("div", "zcas-account-main");
     var name = el("div", "zcas-name", account.label || account.email || "账号");
@@ -277,14 +278,7 @@ function quotaBlock(quota, className) {
     actions.appendChild(use);
     var rename = iconButton("edit", "重命名");
     rename.onclick = function () {
-      var next = window.prompt("账号名称", account.label || account.email || "");
-      if (next === null) return;
-      next = next.trim();
-      if (!next) { setStatus("账号名称不能为空", true); return; }
-      setBusy(true); setStatus("正在保存账号名称…");
-      request("account-rename", { accountId: account.id, name: next }).then(function () {
-        setBusy(false); setStatus("账号名称已更新"); return loadState(false);
-      }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
+      renameId = account.id; render();
     };
     actions.appendChild(rename);
     if (mode === "settings") {
@@ -309,6 +303,34 @@ function quotaBlock(quota, className) {
     }
     row.append(main, actions);
     return row;
+  }
+
+  function renameForm(account) {
+    var form = el("form", "zcas-rename");
+    var input = el("input", "zcas-control");
+    input.value = account.label || account.email || "";
+    input.placeholder = "账号名称";
+    input.setAttribute("aria-label", "账号名称");
+    input.maxLength = 120;
+    var row = el("div", "zcas-rename-row");
+    var cancel = command("取消");
+    var save = command("保存", "zcas-primary");
+    cancel.type = "button"; save.type = "submit";
+    cancel.onclick = function () { renameId = null; render(); };
+    function submit() {
+      var next = input.value.trim();
+      if (!next) { setStatus("账号名称不能为空", true); input.focus(); return; }
+      setBusy(true); setStatus("正在保存账号名称…");
+      request("account-rename", { accountId: account.id, name: next }).then(function () {
+        renameId = null; setBusy(false); setStatus("账号名称已更新"); return loadState(false);
+      }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
+    }
+    form.onsubmit = function (event) { event.preventDefault(); submit(); };
+    save.onclick = submit;
+    row.append(cancel, save);
+    form.append(input, row);
+    setTimeout(function () { input.focus(); input.select(); }, 0);
+    return form;
   }
 
   function captureForm() {
