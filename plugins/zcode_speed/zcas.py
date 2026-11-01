@@ -38,7 +38,6 @@ PROVIDERS = {
 }
 TOKEN_URL = "https://zcode.z.ai/api/v1/oauth/token"
 OAUTH_CLI_INIT_URL = "https://zcode.z.ai/api/v1/oauth/cli/init"
-OAUTH_LOGIN_URL = "https://zcode.z.ai/app/oauth/login"
 BILLING_URL = "https://zcode.z.ai/api/v1/zcode-plan/billing/balance"
 BUSINESS_LOGIN_URL = "https://api.z.ai/api/auth/z/login"
 USAGE_URL = "api/monitor/usage/quota/limit"
@@ -705,11 +704,7 @@ def start_oauth_flow(provider):
     if not authorize.startswith("https://"):
         raise ValueError("OAuth flow 初始化响应无效")
     parsed = urllib.parse.urlparse(authorize)
-    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
-    redirect_key = "redirect" if provider["id"] == "bigmodel" else "redirect_uri"
-    query = [(key, OAUTH_LOGIN_URL if key == redirect_key else value) for key, value in query]
-    authorize = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(query)))
-    state = dict(query).get("state", "")
+    state = urllib.parse.parse_qs(parsed.query).get("state", [""])[0]
     expires_at = float(data.get("expires_at", 0))
     interval = max(1.0, float(data.get("poll_interval_sec", 2)))
     if not state or expires_at <= time.time() or interval >= expires_at - time.time():

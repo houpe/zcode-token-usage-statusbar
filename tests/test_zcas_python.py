@@ -148,6 +148,19 @@ class ZcasPythonTest(unittest.TestCase):
         self.assertEqual(start.call_args.args[0], provider)
         self.assertEqual(save.call_args.args[0]["provider"], provider)
 
+    def test_oauth_start_preserves_backend_cli_callback(self):
+        authorize = ("https://chat.z.ai/api/oauth/authorize?response_type=code"
+                     "&client_id=client&redirect_uri=https%3A%2F%2Fzcode.z.ai%2Fapi%2Fv1%2Foauth%2Fcli%2Fcallback%2Fzai"
+                     "&state=flow-state")
+        response = {"code": 0, "data": {"flow_id": "flow", "authorize_url": authorize,
+                                         "expires_at": time.time() + 60, "poll_interval_sec": 2}}
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas, "read_json_url", return_value=response):
+            flow = zcas.start_oauth_flow(zcas.PROVIDERS["zai"])
+        self.assertEqual(flow["authorizeUrl"], authorize)
+        self.assertEqual(flow["state"], "flow-state")
+        self.assertEqual(flow["flowId"], "flow")
+
     def test_save_oauth_token_set_converts_zai_platform_token(self):
         with mock.patch.dict("os.environ", self.env), \
              mock.patch.object(zcas, "resolve_zai_business_token", return_value=fake_jwt("oauth-user")) as resolve:
