@@ -87,3 +87,17 @@ test("hover account panel uses compact statusbar density", () => {
   assert.match(source, /\.zcas-meter\{height:3px/);
   assert.match(source, /\.zcas-status:empty\{display:none\}/);
 });
+
+test("statusbar tooltip yields to the open account hover panel", () => {
+  const overlay = fs.readFileSync(path.join(__dirname, "..", "overlay.js"), "utf8");
+  const mousemove = overlay.slice(
+    overlay.indexOf('listenGlobal(document, "mousemove"'),
+    overlay.indexOf("/* 鼠标甩出窗口外/窗口失焦"),
+  );
+  assert.match(mousemove, /document\.querySelector\("\.zusage-account-panel\.zcas-open"\)/);
+  assert.ok(
+    mousemove.indexOf('.zusage-account-panel.zcas-open') <
+      mousemove.indexOf("if (!bar.contains(t))"),
+    "account panel check must precede statusbar hover retention",
+  );
+});
