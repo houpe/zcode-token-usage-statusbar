@@ -56,7 +56,7 @@ class PluginContractTests(unittest.TestCase):
             # 改仓库名/分支/图标路径任一环都应显式改这里，而不是静默 404。
             icon = market["plugins"][0].get("icon", "")
             self.assertEqual(icon,
-                             "https://raw.githubusercontent.com/houpe/zcode-token-usage-statusbar/zcode_speed/docs/promo/zcode_speed-icon.png")
+                             "https://cdn.jsdelivr.net/gh/houpe/zcode-token-usage-statusbar@zcode_speed/docs/promo/zcode_speed-icon.png")
             self.assertTrue((ROOT / "docs/promo/zcode_speed-icon.png").is_file(), icon)
 
     def test_hook_matcher_and_timeouts_match_host_contract(self):
