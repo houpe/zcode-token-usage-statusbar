@@ -148,6 +148,30 @@ class ZcasPythonTest(unittest.TestCase):
         self.assertEqual(start.call_args.args[0], provider)
         self.assertEqual(save.call_args.args[0]["provider"], provider)
 
+    def test_oauth_finish_failure_preserves_pending_for_retry(self):
+        provider = zcas.PROVIDERS["zai"]
+        flow = {"provider": provider, "pollToken": "token", "flowId": "flow",
+                "authorizeUrl": "https://example/auth", "expiresAt": time.time() + 60,
+                "interval": 0, "state": "state"}
+        tokens = (fake_jwt("poll-user"), fake_jwt("business-user"), "refresh", {"user_id": "poll-user"})
+        saved = {"meta": {"id": "poll-use"}}
+        output = io.StringIO()
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas, "start_oauth_flow", return_value=flow), \
+             mock.patch.object(zcas, "open_url"), \
+             mock.patch.object(zcas, "wait_oauth_flow", side_effect=[RuntimeError("temporary"), tokens]), \
+             mock.patch.object(zcas, "save_oauth_token_set", return_value=saved), \
+             redirect_stdout(output), mock.patch("sys.stdin", io.StringIO(
+                 json.dumps({"id": "start", "action": "oauth-start", "provider": "zai"}) + "\n" +
+                 json.dumps({"id": "fail", "action": "oauth-finish", "input": ""}) + "\n" +
+                 json.dumps({"id": "retry", "action": "oauth-finish", "input": ""}) + "\n"
+             )):
+            zcas.serve()
+        responses = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertFalse(responses[1]["ok"])
+        self.assertTrue(responses[2]["ok"])
+        self.assertEqual(responses[2]["result"], saved)
+
     def test_oauth_start_preserves_backend_cli_callback(self):
         authorize = ("https://chat.z.ai/api/oauth/authorize?response_type=code"
                      "&client_id=client&redirect_uri=https%3A%2F%2Fzcode.z.ai%2Fapi%2Fv1%2Foauth%2Fcli%2Fcallback%2Fzai"

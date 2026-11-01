@@ -15,6 +15,7 @@ import secrets
 import subprocess
 import sys
 import time
+import traceback
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -800,22 +801,33 @@ def serve():
             elif action == "oauth-finish":
                 if not pending: raise ValueError("没有进行中的授权，请先选择添加或重新授权")
                 if request.get("input", "").strip():
-                    current, pending = pending, None
+                    current = pending
                     parsed = parse_callback(request["input"])
                     result = add_or_update_oauth(current, parsed[0], parsed[1],
                                                  name=current.get("name", ""), note=current.get("note", ""))
+                    pending = None
                 else:
-                    flow, pending = pending["poll"], None
+                    flow = pending["poll"]
                     token, access_token, refresh_token, user = wait_oauth_flow(flow)
                     result = save_oauth_token_set({"provider": flow["provider"], "accountId": flow.get("accountId", ""),
                                                    "name": flow.get("name", ""), "note": flow.get("note", "")},
                                                   token, access_token, refresh_token, user)
+                    pending = None
             elif action == "oauth-cancel":
                 pending = None; result = {}
             else:
                 raise ValueError("未知操作: %s" % action)
             response = {"id": request.get("id"), "ok": True, "result": result}
         except Exception as error:
+            try:
+                action = request.get("action", "unknown") if isinstance(request, dict) else "invalid"
+                with data_dir().mkdir(parents=True, exist_ok=True), \
+                     open(data_dir() / "account-errors.log", "a", encoding="utf-8") as log:
+                    log.write(json.dumps({"time": int(time.time() * 1000), "action": action,
+                                          "type": type(error).__name__, "error": str(error),
+                                          "trace": traceback.format_exc()}, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
             response = {"id": request.get("id") if isinstance(request, dict) else None, "ok": False, "error": str(error)}
         print(json.dumps(response, ensure_ascii=False, separators=(",", ":")), flush=True)
 

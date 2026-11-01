@@ -116,3 +116,9 @@ test("oauth completion waits for the server-side polling flow", () => {
   assert.match(source, /正在等待浏览器授权结果…/);
   assert.match(source, /旧版回调链接（可选；一般留空自动等待）/);
 });
+
+test("reauthorization maps stored provider slots to login channels", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /indexOf\("bigmodel"\) >= 0 \? "bigmodel" : "zai"/);
+  assert.doesNotMatch(source, /provider: account\.provider,/);
+});

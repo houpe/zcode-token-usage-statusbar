@@ -278,7 +278,10 @@ function quotaBlock(quota, className) {
     actions.appendChild(rename);
     if (mode === "settings") {
       var reauth = iconButton("key", "重新授权");
-      reauth.onclick = function () { oauth = { accountId: account.id, provider: account.provider, started: false }; captureOpen = false; render(); };
+      reauth.onclick = function () {
+        var provider = String(account.provider || "").indexOf("bigmodel") >= 0 ? "bigmodel" : "zai";
+        oauth = { accountId: account.id, provider: provider, started: false }; captureOpen = false; render();
+      };
       actions.appendChild(reauth);
       if (prefs.unbind) {
         var unbind = iconButton("trash", "解绑本机快照");
