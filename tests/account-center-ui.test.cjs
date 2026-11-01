@@ -71,10 +71,18 @@ test("account cards stay compact and expose icon-only actions accessibly", () =>
   const row = source.slice(source.indexOf("function accountRow("), source.indexOf("function captureForm("));
   assert.doesNotMatch(row, /providerText|account\.shortId/);
   assert.match(row, /iconButton\("switch", isCurrent \? "当前账号" : "切换"\)/);
+  assert.match(source, /iconButton\("edit", "重命名"\)/);
+  assert.match(source, /request\("account-rename", \{ accountId: account\.id, name: next \}\)/);
   assert.match(row, /iconButton\("key", "重新授权"\)/);
   assert.match(source, /iconButton\("save", "保存当前"\)/);
   assert.match(source, /iconButton\("plus", "添加账号"\)/);
   assert.doesNotMatch(source, /Start Plan|Coding Plan/);
+});
+
+test("current badge uses a high-contrast filled treatment", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /\.zcas-current-badge\{[^}]*background:var\(--color-brand,#6d8dff\)/);
+  assert.match(source, /\.zcas-current-badge\{[^}]*color:var\(--color-on-brand,#101218\)/);
 });
 
 test("hover account panel uses compact statusbar density", () => {

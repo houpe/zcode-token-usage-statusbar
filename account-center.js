@@ -13,6 +13,7 @@
   var ICONS = {
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
     switch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h13m0 0-3-3m3 3-3 3"/><path d="M20 16H7m0 0 3-3m-3 3 3 3"/></svg>',
     key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8m-3 3 3 3"/></svg>',
     save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
@@ -126,7 +127,7 @@ function quotaBlock(quota, className) {
       ".zcas-command.zcas-primary{background:var(--color-brand,#6d8dff);color:var(--color-on-brand,#101218);border-color:transparent;font-weight:600}" +
       ".zcas-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;padding:5px;flex:0 0 auto}.zcas-icon-btn svg{width:16px;height:16px}" +
       ".zcas-account{display:flex;align-items:center;gap:8px}.zcas-account-main{flex:1;min-width:0}.zcas-account-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}" +
-      ".zcas-current-badge{display:inline-block;margin-left:6px;padding:0 5px;border-radius:4px;background:var(--color-background-hover,rgba(127,127,127,.14));font-size:11px;font-weight:500;color:var(--color-foreground-subtle,#b4bac5)}" +
+      ".zcas-current-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--color-brand,#6d8dff);font-size:11px;font-weight:650;color:var(--color-on-brand,#101218)}" +
       ".zcas-empty{padding:16px 0;text-align:center;color:var(--color-foreground-subtle,#a7adb8)}" +
       ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:9px}.zcas-form label{display:grid;gap:4px;color:var(--color-foreground-subtle,#b4bac5);font-size:12px}" +
       ".zcas-form input,.zcas-form select,.zcas-form textarea{width:100%;border:1px solid var(--color-input-border,rgba(127,127,127,.32));border-radius:6px;background:var(--color-input,#191a1c);color:var(--color-foreground,#f3f4f6);font:inherit;padding:7px 8px;outline:none}" +
@@ -263,6 +264,18 @@ function quotaBlock(quota, className) {
       }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
     };
     actions.appendChild(use);
+    var rename = iconButton("edit", "重命名");
+    rename.onclick = function () {
+      var next = window.prompt("账号名称", account.label || account.email || "");
+      if (next === null) return;
+      next = next.trim();
+      if (!next) { setStatus("账号名称不能为空", true); return; }
+      setBusy(true); setStatus("正在保存账号名称…");
+      request("account-rename", { accountId: account.id, name: next }).then(function () {
+        setBusy(false); setStatus("账号名称已更新"); return loadState(false);
+      }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
+    };
+    actions.appendChild(rename);
     if (mode === "settings") {
       var reauth = iconButton("key", "重新授权");
       reauth.onclick = function () { oauth = { accountId: account.id, provider: account.provider, started: false }; captureOpen = false; render(); };

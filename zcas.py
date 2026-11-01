@@ -694,7 +694,7 @@ def serve():
                     raise ValueError("账号名称不能为空")
                 meta, snap = load_account(account_id)
                 meta["label"] = request["name"].strip()
-                meta["note"] = request.get("note", "")
+                meta["note"] = request.get("note", meta.get("note", ""))
                 save_account(meta, snap)
                 result = {"meta": meta}
             elif action == "delete":

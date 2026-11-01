@@ -80,6 +80,23 @@ class ZcasPythonTest(unittest.TestCase):
             self.assertFalse(second["ok"])
             self.assertEqual(second["id"], "2")
 
+    def test_rename_updates_label_and_preserves_existing_note(self):
+        with mock.patch.dict("os.environ", self.env):
+            self.write_live()
+            captured = zcas.capture("Main", "keep-note", True)
+            request = json.dumps({
+                "id": "rename-1", "action": "rename",
+                "accountId": captured["meta"]["id"], "name": "Renamed",
+            })
+            output = io.StringIO()
+            with redirect_stdout(output), mock.patch("sys.stdin", io.StringIO(request + "\n")):
+                zcas.serve()
+            response = json.loads(output.getvalue())
+            self.assertTrue(response["ok"])
+            self.assertEqual(response["result"]["meta"]["label"], "Renamed")
+            self.assertEqual(response["result"]["meta"]["note"], "keep-note")
+            self.assertEqual(zcas.account_list()[0]["label"], "Renamed")
+
     def test_switch_preserves_unrelated_config_and_restores_rollback_files(self):
         with mock.patch.dict("os.environ", self.env):
             self.write_live("user-old")
