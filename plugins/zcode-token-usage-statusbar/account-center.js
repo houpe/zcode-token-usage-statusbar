@@ -509,6 +509,7 @@ function quotaBlock(quota, className) {
   window.__zusageAccountRefresh = function () {
     return loadState(true);
   };
+  ensurePanel();   // 样式随隐藏面板先挂载，避免入口首次出现时使用 SVG 默认尺寸。
   panel.addEventListener("pointerenter", panelPointerEnter);
   panel.addEventListener("pointerleave", panelPointerLeave);
   window.addEventListener("storage", syncPrefsFromStorage);
@@ -533,7 +534,6 @@ function quotaBlock(quota, className) {
     delete window.__zusageAccountRefresh;
     delete window.__zusageAccountDispose;
   };
-  ensurePanel();   // 样式随隐藏面板先挂载，避免入口首次出现时使用 SVG 默认尺寸。
   mount();
   loadState(false);
 })();

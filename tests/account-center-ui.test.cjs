@@ -55,6 +55,14 @@ test("hiding the account chip beats its display rule", () => {
   assert.match(source, /\.zusage-account-chip\[hidden\]\{display:none!important\}/);
 });
 
+test("account styles mount before chip listeners use the panel", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.ok(
+    source.lastIndexOf("ensurePanel();") < source.indexOf('panel.addEventListener("pointerenter"'),
+    "ensurePanel must run before panel listeners",
+  );
+});
+
 test("account cards stay compact and expose icon-only actions accessibly", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
   assert.doesNotMatch(source, /zcas-current(?!\-badge)/, "current account must not render as a duplicate card");
