@@ -133,9 +133,21 @@ test("new account form remembers the chosen provider", () => {
 test("oauth form labels stay compact and readable", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
   assert.match(source, /zcas-form-title/);
-  assert.match(source, /zcas-form \.zcas-label\{white-space:nowrap\}/);
+  assert.doesNotMatch(source, /\.zcas-form label\{display:grid/);
+  assert.match(source, /\.zcas-fields\{display:flex;flex-wrap:wrap;gap:10px\}/);
+  assert.match(source, /\.zcas-field\{display:grid;gap:5px;align-content:start;width:180px;min-width:0\}/);
+  assert.match(source, /\.zcas-field-md\{width:220px\}/);
+  assert.match(source, /\.zcas-field-wide\{width:min\(320px,100%\)\}/);
+  assert.match(source, /\.zcas-field-label\{white-space:nowrap/);
   assert.match(source, /labeled\("渠道", provider\)/);
-  assert.match(source, /labeled\("名称", name\)/);
+  assert.match(source, /labeled\("名称", name, "md"\)/);
+});
+
+test("account fields are isolated from settings label styles", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.doesNotMatch(source, /label\.appendChild\(control\)/);
+  assert.match(source, /label\.htmlFor = control\.id/);
+  assert.match(source, /var fields = el\("div", "zcas-fields"\)/);
 });
 
 test("reauthorization maps stored provider slots to login channels", () => {

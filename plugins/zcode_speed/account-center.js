@@ -7,7 +7,7 @@
   var state = { current: null, accounts: [], hasLastBackup: false };
   var prefs = readPrefs();
   var quotas = {};
-  var panel = null, anchor = null, busy = false, oauth = null, captureOpen = false;
+  var panel = null, anchor = null, busy = false, oauth = null, captureOpen = false, fieldSeq = 0;
   var chips = [];
   var closeTimer = 0, pinned = false;
   var ICONS = {
@@ -137,9 +137,8 @@ function quotaBlock(quota, className) {
       ".zcas-account{display:flex;align-items:center;gap:8px}.zcas-account-main{flex:1;min-width:0}.zcas-account-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}" +
       ".zcas-current-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--color-brand,#6d8dff);font-size:11px;font-weight:650;color:var(--color-on-brand,#101218)}" +
       ".zcas-empty{padding:16px 0;text-align:center;color:var(--color-foreground-subtle,#a7adb8)}" +
-      ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:9px}.zcas-form-title{margin:0;color:var(--color-foreground,#f3f4f6);font-size:13px;font-weight:650}.zcas-form label{display:grid;gap:4px;color:var(--color-foreground-subtle,#b4bac5);font-size:12px}.zcas-form .zcas-label{white-space:nowrap}" +
-      ".zcas-form input,.zcas-form select,.zcas-form textarea{width:100%;border:1px solid var(--color-input-border,rgba(127,127,127,.32));border-radius:6px;background:var(--color-input,#191a1c);color:var(--color-foreground,#f3f4f6);font:inherit;padding:7px 8px;outline:none}" +
-      ".zcas-form textarea{min-height:68px;resize:vertical}.zcas-form input:focus,.zcas-form select:focus,.zcas-form textarea:focus,.zcas-command:focus-visible,.zcas-icon-btn:focus-visible,.zusage-account-chip:focus-visible{outline:2px solid var(--color-input-border-focused,#8aa4ff);outline-offset:2px}" +
+      ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:10px}.zcas-form-title{margin:0;color:var(--color-foreground,#f3f4f6);font-size:13px;font-weight:650}.zcas-fields{display:flex;flex-wrap:wrap;gap:10px}.zcas-field{display:grid;gap:5px;align-content:start;width:180px;min-width:0}.zcas-field-md{width:220px}.zcas-field-wide{width:min(320px,100%)}.zcas-field-label{white-space:nowrap;color:var(--color-foreground-subtle,#b4bac5);font-size:12px;line-height:1.2}" +
+      ".zcas-control{display:block;width:100%;border:1px solid var(--color-input-border,rgba(127,127,127,.32));border-radius:6px;background:var(--color-input,#191a1c);color:var(--color-foreground,#f3f4f6);font:inherit;padding:7px 8px;outline:none}.zcas-control.zcas-textarea{min-height:60px;resize:vertical}.zcas-control:focus,.zcas-command:focus-visible,.zcas-icon-btn:focus-visible,.zusage-account-chip:focus-visible{outline:2px solid var(--color-input-border-focused,#8aa4ff);outline-offset:2px}" +
       ".zcas-form-row{display:flex;gap:8px;justify-content:flex-end}.zcas-form-note{margin:0;color:var(--color-foreground-subtle,#a7adb8);font-size:12px}" +
       ".zcas-status{min-height:0;padding:0 10px 6px;color:var(--color-foreground-subtle,#b4bac5);font-size:11px}.zcas-status:empty{display:none}.zcas-status[data-error=true]{color:#f0a35e}" +
       ".zcas-foot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--color-border,rgba(127,127,127,.2));color:var(--color-foreground-subtle,#a7adb8);font-size:11px}.zcas-foot span{flex:1}" +
@@ -314,10 +313,12 @@ function quotaBlock(quota, className) {
 
   function captureForm() {
     var form = el("div", "zcas-form");
-    var name = el("input"); name.placeholder = "账号名称（默认使用邮箱）";
-    var note = el("input"); note.placeholder = "备注（可选）";
-    form.appendChild(labeled("当前登录态", name));
-    form.appendChild(labeled("备注", note));
+    var fields = el("div", "zcas-fields");
+    var name = el("input"); name.placeholder = "账号名称（默认使用邮箱）"; name.className = "zcas-control";
+    var note = el("input"); note.placeholder = "备注（可选）"; note.className = "zcas-control";
+    fields.appendChild(labeled("当前登录态", name, "md"));
+    fields.appendChild(labeled("备注", note, "md"));
+    form.appendChild(fields);
     var row = el("div", "zcas-form-row");
     var cancel = command("取消"); cancel.onclick = function () { captureOpen = false; render(); };
     var save = command("保存快照", "zcas-primary");
@@ -331,11 +332,14 @@ function quotaBlock(quota, className) {
     return form;
   }
 
-  function labeled(text, control) {
-    var label = el("label", "zcas-label");
-    label.appendChild(el("span", "", text));
-    label.appendChild(control);
-    return label;
+  function labeled(text, control, size) {
+    var field = el("div", "zcas-field" + (size === "md" ? " zcas-field-md" : size === "wide" ? " zcas-field-wide" : ""));
+    if (!control.id) control.id = "zcas-field-" + (++fieldSeq);
+    var label = el("label", "zcas-field-label", text);
+    label.htmlFor = control.id;
+    if (!control.className) control.className = "zcas-control";
+    field.append(label, control);
+    return field;
   }
 
   function oauthForm() {
@@ -348,14 +352,16 @@ function quotaBlock(quota, className) {
     provider.value = (oauth.provider || readProviderPreference()) === "bigmodel" ? "bigmodel" : "zai";
     provider.addEventListener("change", function () { rememberProvider(provider.value); });
     provider.disabled = !!oauth.accountId || oauth.started;
-    var name = el("input"); name.placeholder = "账号名称（可选）"; name.disabled = oauth.started;
+    var name = el("input"); name.placeholder = "账号名称（可选）"; name.className = "zcas-control"; name.disabled = oauth.started;
     form.appendChild(el("p", "zcas-form-title", title));
-    form.appendChild(labeled("渠道", provider));
-    if (!oauth.accountId) form.appendChild(labeled("名称", name));
+    var fields = el("div", "zcas-fields");
+    fields.appendChild(labeled("渠道", provider));
+    if (!oauth.accountId) fields.appendChild(labeled("名称", name, "md"));
+    form.appendChild(fields);
     var callback = el("textarea");
     callback.placeholder = "旧版回调链接（可选；一般留空自动等待）";
     if (oauth.started) {
-      form.appendChild(labeled("旧版回调", callback));
+      form.appendChild(labeled("旧版回调", callback, "wide"));
       var note = el("p", "zcas-form-note", "在浏览器完成登录后，点击「完成授权」；插件会自动等待授权结果。");
       form.appendChild(note);
     }
