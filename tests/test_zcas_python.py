@@ -184,6 +184,25 @@ class ZcasPythonTest(unittest.TestCase):
         self.assertEqual(flow["authorizeUrl"], authorize)
         self.assertEqual(flow["state"], "flow-state")
         self.assertEqual(flow["flowId"], "flow")
+        self.assertEqual(flow["provider"], zcas.PROVIDERS["zai"])
+
+    def test_state_restores_pending_oauth_after_renderer_reload(self):
+        provider = zcas.PROVIDERS["bigmodel"]
+        flow = {"provider": provider, "pollToken": "token", "flowId": "flow",
+                "authorizeUrl": "https://example/auth", "expiresAt": time.time() + 60,
+                "interval": 0, "state": "state"}
+        output = io.StringIO()
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas, "start_oauth_flow", return_value=flow), \
+             mock.patch.object(zcas, "open_url"), redirect_stdout(output), mock.patch("sys.stdin", io.StringIO(
+                 json.dumps({"id": "start", "action": "oauth-start", "provider": "bigmodel"}) + "\n" +
+                 json.dumps({"id": "state", "action": "state"}) + "\n"
+             )):
+            zcas.serve()
+        start, state = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertTrue(start["ok"])
+        self.assertEqual(state["result"]["oauthPending"],
+                         {"provider": "bigmodel", "accountId": "", "reauth": False})
 
     def test_save_oauth_token_set_converts_zai_platform_token(self):
         with mock.patch.dict("os.environ", self.env), \

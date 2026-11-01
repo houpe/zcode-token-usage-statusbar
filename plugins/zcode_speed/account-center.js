@@ -388,6 +388,10 @@ function quotaBlock(quota, className) {
 
   function loadState(withQuota) {
     return request("account-state").then(function (next) {
+      if (!oauth && next.oauthPending) {
+        oauth = { accountId: next.oauthPending.accountId || "", provider: next.oauthPending.provider,
+                  started: true };
+      }
       state.current = next.current || null;
       state.accounts = Array.isArray(next.accounts) ? next.accounts : [];
       state.hasLastBackup = !!next.hasLastBackup;

@@ -710,7 +710,7 @@ def start_oauth_flow(provider):
     interval = max(1.0, float(data.get("poll_interval_sec", 2)))
     if not state or expires_at <= time.time() or interval >= expires_at - time.time():
         raise ValueError("OAuth flow 初始化响应无效")
-    return {"pollToken": poll_token, "flowId": str(data.get("flow_id", "")),
+    return {"provider": provider, "pollToken": poll_token, "flowId": str(data.get("flow_id", "")),
             "authorizeUrl": authorize, "expiresAt": expires_at, "interval": interval, "state": state}
 
 
@@ -760,6 +760,13 @@ def open_url(url):
 
 def serve():
     pending = None
+
+    def pending_summary():
+        if not pending:
+            return None
+        return {"provider": pending["provider"]["id"], "accountId": pending.get("accountId", ""),
+                "reauth": bool(pending.get("accountId"))}
+
     for line in sys.stdin:
         try:
             request = json.loads(line)
@@ -767,6 +774,7 @@ def serve():
             account_id = request.get("accountId", "")
             if action == "state":
                 result = current_account_state()
+                result["oauthPending"] = pending_summary()
             elif action == "quota":
                 result = {"accountId": account_id, "quota": quota_for(account_id)}
             elif action == "capture":
