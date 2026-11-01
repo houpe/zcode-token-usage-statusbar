@@ -37,6 +37,8 @@ PROVIDERS = {
     },
 }
 TOKEN_URL = "https://zcode.z.ai/api/v1/oauth/token"
+OAUTH_CLI_INIT_URL = "https://zcode.z.ai/api/v1/oauth/cli/init"
+OAUTH_LOGIN_URL = "https://zcode.z.ai/app/oauth/login"
 BILLING_URL = "https://zcode.z.ai/api/v1/zcode-plan/billing/balance"
 BUSINESS_LOGIN_URL = "https://api.z.ai/api/auth/z/login"
 USAGE_URL = "api/monitor/usage/quota/limit"
@@ -600,6 +602,55 @@ def exchange_code(provider, code, state):
     return data["token"], oauth["access_token"], oauth.get("refresh_token", ""), data.get("user", {})
 
 
+def read_json_url(request, timeout=15):
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode())
+
+
+def resolve_zai_business_token(access_token):
+    request = urllib.request.Request(BUSINESS_LOGIN_URL, data=json.dumps({"token": access_token}).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+    result = read_json_url(request, 10)
+    if result.get("success") is False or result.get("code") not in (None, 0, 200):
+        raise ValueError("z.ai 业务 token 交换失败")
+    data = result.get("data") if isinstance(result.get("data"), dict) else {}
+    business = data.get("access_token") or data.get("accessToken")
+    if not business:
+        raise ValueError("z.ai 业务 token 交换失败")
+    return business
+
+
+def save_oauth_token_set(pending, token, access_token, refresh_token, user):
+    provider, account_id = pending["provider"], pending["accountId"]
+    if provider["id"] == "zai":
+        access_token = resolve_zai_business_token(access_token)
+    secret = default_secret()
+    fields = credential_fields(provider, token, access_token, refresh_token, user, secret)
+    if account_id:
+        meta, old = load_account(account_id)
+        slots = provider_slots(provider, token)
+        for slot_id, old_slot in old.get("providerSlots", {}).items():
+            if slot_id in slots:
+                merged = copy.deepcopy(old_slot)
+                merged["enabled"] = True
+                merged.setdefault("options", {})["apiKey"] = token
+                slots[slot_id] = merged
+        fp = fingerprint(fields, {"provider": slots}, secret)
+        if fp["emailShortId"] != account_id and meta.get("userId") and fp["userId"] != meta.get("userId"):
+            raise ValueError("授权账号与目标账号不一致")
+        meta["updatedAt"] = int(time.time() * 1000)
+        save_account(meta, {"version": 2, "credentialFields": fields, "providerSlots": slots})
+        return {"meta": meta, "reauth": True, "restartRequired": True}
+    fp = fingerprint(fields, {"provider": provider_slots(provider, token)}, secret)
+    if not fp:
+        raise ValueError("无法从 token 中提取账号指纹")
+    if meta_path(fp["emailShortId"]).exists():
+        return {"meta": read_json(meta_path(fp["emailShortId"])), "created": False}
+    meta = meta_from_fingerprint(fp, pending.get("name", ""), pending.get("note", ""), "oauth")
+    save_account(meta, {"version": 2, "credentialFields": fields, "providerSlots": provider_slots(provider, token)})
+    return {"meta": meta, "created": True}
+
+
 def credential_fields(provider, token, access_token, refresh_token, user, secret):
     if provider["id"] == "zai" and isinstance(user.get("rawProfile"), dict):
         profile = dict(user["rawProfile"])
@@ -638,37 +689,71 @@ def add_or_update_oauth(pending, code, state, name, note):
     if state and state != pending["state"]:
         raise ValueError("授权回调 state 不匹配")
     token, access_token, refresh_token, user = exchange_code(provider, code, state)
-    secret = default_secret()
-    fields = credential_fields(provider, token, access_token, refresh_token, user, secret)
-    if account_id:
-        meta, old = load_account(account_id)
-        slots = provider_slots(provider, token)
-        for slot_id, old_slot in old.get("providerSlots", {}).items():
-            if slot_id in slots:
-                merged = copy.deepcopy(old_slot)
-                merged["enabled"] = True
-                merged.setdefault("options", {})["apiKey"] = token
-                slots[slot_id] = merged
-        fp = fingerprint(fields, {"provider": slots}, secret)
-        if fp["emailShortId"] != account_id and meta.get("userId") and fp["userId"] != meta.get("userId"):
-            raise ValueError("授权账号与目标账号不一致")
-        meta["updatedAt"] = int(time.time() * 1000)
-        save_account(meta, {"version": 2, "credentialFields": fields, "providerSlots": slots})
-        return {"meta": meta, "reauth": True, "restartRequired": True}
-    fp = fingerprint(fields, {"provider": provider_slots(provider, token)}, secret)
-    if not fp:
-        raise ValueError("无法从 token 中提取账号指纹")
-    if meta_path(fp["emailShortId"]).exists():
-        return {"meta": read_json(meta_path(fp["emailShortId"])), "created": False}
-    meta = meta_from_fingerprint(fp, name, note, "oauth")
-    save_account(meta, {"version": 2, "credentialFields": fields, "providerSlots": provider_slots(provider, token)})
-    try:
-        request = urllib.request.Request(BUSINESS_LOGIN_URL, data=json.dumps({"token": access_token}).encode(),
-                                         headers={"Content-Type": "application/json"}, method="POST")
-        urllib.request.urlopen(request, timeout=5).read()
-    except Exception:
-        pass
-    return {"meta": meta, "created": True}
+    return save_oauth_token_set(pending, token, access_token, refresh_token, user)
+
+
+def start_oauth_flow(provider):
+    poll_token = secrets.token_hex(32)
+    request = urllib.request.Request(OAUTH_CLI_INIT_URL, data=json.dumps({"provider": provider["id"]}).encode(),
+                                     headers={"Content-Type": "application/json",
+                                              "Authorization": "Bearer " + poll_token}, method="POST")
+    result = read_json_url(request)
+    if result.get("code") != 0 or not isinstance(result.get("data"), dict):
+        raise ValueError(result.get("msg") or "OAuth flow 初始化失败")
+    data = result["data"]
+    authorize = str(data.get("authorize_url", ""))
+    if not authorize.startswith("https://"):
+        raise ValueError("OAuth flow 初始化响应无效")
+    parsed = urllib.parse.urlparse(authorize)
+    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    redirect_key = "redirect" if provider["id"] == "bigmodel" else "redirect_uri"
+    query = [(key, OAUTH_LOGIN_URL if key == redirect_key else value) for key, value in query]
+    authorize = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(query)))
+    state = dict(query).get("state", "")
+    expires_at = float(data.get("expires_at", 0))
+    interval = max(1.0, float(data.get("poll_interval_sec", 2)))
+    if not state or expires_at <= time.time() or interval >= expires_at - time.time():
+        raise ValueError("OAuth flow 初始化响应无效")
+    return {"pollToken": poll_token, "flowId": str(data.get("flow_id", "")),
+            "authorizeUrl": authorize, "expiresAt": expires_at, "interval": interval, "state": state}
+
+
+def poll_oauth_flow(flow):
+    if time.time() >= flow["expiresAt"]:
+        raise ValueError("OAuth flow 已过期")
+    request = urllib.request.Request(OAUTH_CLI_INIT_URL.rsplit("/cli/init", 1)[0] +
+                                     "/cli/poll/" + urllib.parse.quote(flow["flowId"], safe=""),
+                                     headers={"Authorization": "Bearer " + flow["pollToken"]})
+    result = read_json_url(request, 10)
+    if result.get("code") != 0:
+        raise ValueError(result.get("msg") or "OAuth flow 查询失败")
+    data = result.get("data") if isinstance(result.get("data"), dict) else {}
+    status = data.get("status")
+    if status == "pending":
+        return None
+    if status != "ready":
+        raise ValueError("OAuth flow 授权失败")
+    provider_id = flow["provider"]["id"]
+    block = data.get(provider_id) if isinstance(data.get(provider_id), dict) else {}
+    access_token = block.get("access_token") or block.get("accessToken")
+    token, user_id = data.get("token"), ""
+    user = data.get("user") if isinstance(data.get("user"), dict) else {}
+    for key in ("user_id", "userId", "id", "sub", "customerNumber"):
+        if user.get(key):
+            user_id = user[key]; break
+    if not token or not access_token or not user_id:
+        raise ValueError("OAuth flow 响应缺少 token")
+    return token, access_token, block.get("refresh_token") or block.get("refreshToken") or "", user
+
+
+def wait_oauth_flow(flow, timeout=105):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        result = poll_oauth_flow(flow)
+        if result is not None:
+            return result
+        time.sleep(flow["interval"])
+    raise ValueError("等待授权结果超时，请在浏览器完成授权后重试")
 
 
 def open_url(url):
@@ -712,17 +797,24 @@ def serve():
                     raw = snap.get("credentialFields", {}).get("oauth:active_provider", "zai")
                     try: provider = provider_from_input(decrypt(raw, default_secret()))
                     except Exception: pass
-                state = secrets.token_hex(16)
-                open_url(authorize_url(provider, state))
-                pending = {"provider": provider, "state": state, "accountId": account_id,
+                flow = start_oauth_flow(provider)
+                open_url(flow["authorizeUrl"])
+                pending = {"provider": provider, "poll": flow, "accountId": account_id,
                            "name": request.get("name", ""), "note": request.get("note", "")}
                 result = {"pending": True, "reauth": bool(account_id)}
             elif action == "oauth-finish":
                 if not pending: raise ValueError("没有进行中的授权，请先选择添加或重新授权")
-                current, pending = pending, None
-                parsed = parse_callback(request.get("input", ""))
-                result = add_or_update_oauth(current, parsed[0], parsed[1],
-                                             name=current.get("name", ""), note=current.get("note", ""))
+                if request.get("input", "").strip():
+                    current, pending = pending, None
+                    parsed = parse_callback(request["input"])
+                    result = add_or_update_oauth(current, parsed[0], parsed[1],
+                                                 name=current.get("name", ""), note=current.get("note", ""))
+                else:
+                    flow, pending = pending["poll"], None
+                    token, access_token, refresh_token, user = wait_oauth_flow(flow)
+                    result = save_oauth_token_set({"provider": flow["provider"], "accountId": flow.get("accountId", ""),
+                                                   "name": flow.get("name", ""), "note": flow.get("note", "")},
+                                                  token, access_token, refresh_token, user)
             elif action == "oauth-cancel":
                 pending = None; result = {}
             else:

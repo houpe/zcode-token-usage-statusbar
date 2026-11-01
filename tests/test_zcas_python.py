@@ -4,6 +4,7 @@ import io
 import json
 import subprocess
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -119,6 +120,49 @@ class ZcasPythonTest(unittest.TestCase):
             self.assertEqual(state["accounts"], [])
             self.assertEqual(state["current"]["savedId"], "")
             self.assertTrue(zcas.has_session(zcas.read_json(zcas.credentials_file())))
+
+    def test_oauth_finish_can_wait_for_polling_without_callback(self):
+        provider = zcas.PROVIDERS["zai"]
+        flow = {"provider": provider, "pollToken": "token", "flowId": "flow",
+                "authorizeUrl": "https://example/auth", "expiresAt": time.time() + 60,
+                "interval": 0, "state": "state"}
+        tokens = (fake_jwt("poll-user"), fake_jwt("business-user"), "refresh", {"user_id": "poll-user"})
+        saved = {"meta": {"id": "poll-use"}}
+        output = io.StringIO()
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas, "start_oauth_flow", return_value=flow) as start, \
+             mock.patch.object(zcas, "open_url") as opened, \
+             mock.patch.object(zcas, "wait_oauth_flow", return_value=tokens) as waited, \
+             mock.patch.object(zcas, "save_oauth_token_set", return_value=saved) as save, \
+             redirect_stdout(output), mock.patch("sys.stdin", io.StringIO(
+                 json.dumps({"id": "start", "action": "oauth-start", "provider": "zai"}) + "\n" +
+                 json.dumps({"id": "finish", "action": "oauth-finish", "input": ""}) + "\n"
+             )):
+            zcas.serve()
+        start_response, finish_response = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertTrue(start_response["ok"])
+        self.assertTrue(opened.called)
+        self.assertTrue(waited.called)
+        self.assertTrue(finish_response["ok"])
+        self.assertEqual(finish_response["result"], saved)
+        self.assertEqual(start.call_args.args[0], provider)
+        self.assertEqual(save.call_args.args[0]["provider"], provider)
+
+    def test_save_oauth_token_set_converts_zai_platform_token(self):
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas, "resolve_zai_business_token", return_value=fake_jwt("oauth-user")) as resolve:
+            provider = zcas.PROVIDERS["zai"]
+            result = zcas.save_oauth_token_set(
+                {"provider": provider, "accountId": "", "name": "Poll", "note": ""},
+                fake_jwt("zcode-user"), fake_jwt("platform-user"), "refresh",
+                {"user_id": "oauth-user", "email": "poll@example.com", "name": "Poll"},
+            )
+        self.assertTrue(result["created"])
+        self.assertEqual(resolve.call_count, 1)
+        with mock.patch.dict("os.environ", self.env):
+            _, snap = zcas.load_account(result["meta"]["id"])
+            profile = json.loads(zcas.decrypt(snap["credentialFields"]["oauth:zai:user_info"], "test-secret"))
+            self.assertEqual(profile["email"], "poll@example.com")
 
     def test_switch_preserves_unrelated_config_and_restores_rollback_files(self):
         with mock.patch.dict("os.environ", self.env):

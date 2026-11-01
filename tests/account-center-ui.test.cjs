@@ -109,3 +109,10 @@ test("statusbar tooltip yields to the open account hover panel", () => {
     "account panel check must precede statusbar hover retention",
   );
 });
+
+test("oauth completion waits for the server-side polling flow", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /插件会自动等待授权结果/);
+  assert.match(source, /正在等待浏览器授权结果…/);
+  assert.match(source, /旧版回调链接（可选；一般留空自动等待）/);
+});

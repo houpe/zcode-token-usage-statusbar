@@ -334,10 +334,10 @@ function quotaBlock(quota, className) {
     form.appendChild(labeled(title, provider));
     if (!oauth.accountId) form.appendChild(labeled("账号名称", name));
     var callback = el("textarea");
-    callback.placeholder = "粘贴浏览器地址栏中的 zcode:// 回调链接";
+    callback.placeholder = "旧版回调链接（可选；一般留空自动等待）";
     if (oauth.started) {
       form.appendChild(labeled("登录完成后粘贴回调链接", callback));
-      var note = el("p", "zcas-form-note", "若浏览器唤起 ZCode，可关闭提示并复制地址栏中的完整 zcode:// 链接。");
+      var note = el("p", "zcas-form-note", "在浏览器完成登录后，点击「完成授权」；插件会自动等待授权结果。");
       form.appendChild(note);
     }
     var row = el("div", "zcas-form-row");
@@ -352,10 +352,10 @@ function quotaBlock(quota, className) {
       if (!oauth.started) {
         setStatus("正在打开浏览器登录页…");
         request("account-oauth-start", { accountId: oauth.accountId, provider: provider.value, name: name.value }).then(function () {
-          oauth.started = true; setBusy(false); setStatus("请在浏览器中完成登录，然后粘贴回调链接"); render();
+          oauth.started = true; setBusy(false); setStatus("请在浏览器完成登录，然后点击「完成授权」"); render();
         }).catch(function (error) { setBusy(false); setStatus(error.message, true); });
       } else {
-        setStatus("正在校验授权并保存账号…");
+        setStatus(callback.value.trim() ? "正在校验授权并保存账号…" : "正在等待浏览器授权结果…");
         request("account-oauth-finish", { input: callback.value }).then(function (result) {
           var reauth = result.reauth;
           oauth = null; setBusy(false); setStatus(reauth ? "授权已更新；切换该账号后新登录态生效" : "账号已添加"); return loadState(true);
