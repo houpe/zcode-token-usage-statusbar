@@ -10,6 +10,7 @@ const BRIDGE_ACTIONS = new Set([
 function createAccountCenter(options) {
   const command = options.command;
   const scriptPath = options.scriptPath;
+  const env = options.env || process.env;
   const spawnProcess = options.spawnProcess || spawn;
   const spawnDetached = options.spawnDetached || spawn;
   const log = options.log || (() => {});
@@ -28,7 +29,7 @@ function createAccountCenter(options) {
 
   function ensureBridge() {
     if (child) return child;
-    child = spawnProcess(command, [scriptPath, "serve"], { windowsHide: true });
+    child = spawnProcess(command, [scriptPath, "serve"], { env, windowsHide: true });
     child.stdout.on("data", (chunk) => {
       buffer += chunk.toString("utf8");
       let newline = buffer.indexOf("\n");
@@ -101,7 +102,7 @@ function createAccountCenter(options) {
     } else {
       return { ok: false, error: "无效的重启操作" };
     }
-    const detached = spawnDetached(command, [scriptPath].concat(args), { detached: true, stdio: "ignore", windowsHide: true });
+    const detached = spawnDetached(command, [scriptPath].concat(args), { env, detached: true, stdio: "ignore", windowsHide: true });
     detached.unref();
     return { ok: true, pending: true, restarting: true };
   }

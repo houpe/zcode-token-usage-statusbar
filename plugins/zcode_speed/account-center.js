@@ -282,7 +282,6 @@ function quotaBlock(quota, className) {
       actions.appendChild(reauth);
       if (prefs.unbind) {
         var unbind = iconButton("trash", "解绑本机快照");
-        unbind.dataset.alwaysDisabled = isCurrent ? "true" : "false";
         unbind.onclick = function () {
           if (!window.confirm("解绑只删除本机保存的「" + account.label + "」登录快照，不影响线上账号。确定继续吗？")) return;
           setBusy(true); setStatus("正在解绑本机快照…");

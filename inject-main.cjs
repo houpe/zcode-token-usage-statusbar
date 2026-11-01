@@ -27,6 +27,7 @@ const CONFIG = path.join(HERE, "config.json");
 const OVERLAY = path.join(HERE, "overlay.js");
 const ACCOUNT_OVERLAY = path.join(HERE, "account-center.js");
 const ZCAS = path.join(HERE, "zcas.py");
+const ZCAS_DATA = path.join(HERE, "zcas");
 const TURN_STATS = path.join(HERE, "turn-stats.js");
 const ZUSAGE = path.join(HERE, "zusage.py");
 const TOKEN_RATE = path.join(HERE, "token_rate.py");
@@ -762,6 +763,7 @@ try {
   accountCenter = createAccountCenter({
     command: readCfgCached().python_path,
     scriptPath: ZCAS,
+    env: Object.assign({}, process.env, { ZCAS_DATA_DIR: ZCAS_DATA }),
     log: (...a) => LOG("[account]", ...a),
   });
 } catch (e) { LOG("account center unavailable:", e.message); }

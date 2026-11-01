@@ -37,6 +37,11 @@ class ZcasPythonTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_plugin_account_store_is_separate_from_standalone_zcas(self):
+        self.assertEqual(zcas.data_dir(), (ROOT / "zcas").resolve())
+        with mock.patch.dict("os.environ", {"ZCAS_DATA_DIR": str(self.data)}):
+            self.assertEqual(zcas.data_dir(), self.data)
+
     def write_live(self, user_id="user-1001"):
         return self.write_live_email(user_id, "user@example.com")
 
@@ -96,6 +101,24 @@ class ZcasPythonTest(unittest.TestCase):
             self.assertEqual(response["result"]["meta"]["label"], "Renamed")
             self.assertEqual(response["result"]["meta"]["note"], "keep-note")
             self.assertEqual(zcas.account_list()[0]["label"], "Renamed")
+
+    def test_delete_current_snapshot_keeps_live_login(self):
+        with mock.patch.dict("os.environ", self.env):
+            self.write_live()
+            captured = zcas.capture("Main", "", True)
+            request = json.dumps({
+                "id": "delete-1", "action": "delete",
+                "accountId": captured["meta"]["id"],
+            })
+            output = io.StringIO()
+            with redirect_stdout(output), mock.patch("sys.stdin", io.StringIO(request + "\n")):
+                zcas.serve()
+            response = json.loads(output.getvalue())
+            self.assertTrue(response["ok"])
+            state = zcas.current_account_state()
+            self.assertEqual(state["accounts"], [])
+            self.assertEqual(state["current"]["savedId"], "")
+            self.assertTrue(zcas.has_session(zcas.read_json(zcas.credentials_file())))
 
     def test_switch_preserves_unrelated_config_and_restores_rollback_files(self):
         with mock.patch.dict("os.environ", self.env):

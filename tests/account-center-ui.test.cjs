@@ -45,7 +45,7 @@ test("account center embeds in statusbar settings and exposes a hover-only switc
 test("local account unbind is opt-out and never offered for the running account", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
   assert.match(source, /request\("account-delete", \{ accountId: account\.id \}\)/);
-  assert.match(source, /unbind\.dataset\.alwaysDisabled = isCurrent \? "true" : "false"/);
+  assert.doesNotMatch(source, /unbind\.dataset\.alwaysDisabled = isCurrent/);
   assert.match(source, /if \(prefs\.unbind\)/);
   assert.match(source, /raw\.unbind === false/);
 });

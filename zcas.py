@@ -52,7 +52,8 @@ def zcode_dir():
 
 
 def data_dir():
-    return Path(os.environ.get("ZCAS_DATA_DIR", home() / ".zcas"))
+    # Plugin account snapshots are owned by zcode_speed; standalone zcas keeps ~/.zcas.
+    return Path(os.environ.get("ZCAS_DATA_DIR", Path(__file__).resolve().parent / "zcas"))
 
 
 def credentials_file():

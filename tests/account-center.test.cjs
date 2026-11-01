@@ -51,3 +51,28 @@ test("switch and rollback detach so zcas survives the ZCode restart", () => {
   assert.equal(calls[0].options.detached, true);
   assert.equal(calls[0].unref, true);
 });
+
+test("bridge and restart processes receive the plugin-owned account store", () => {
+  const child = fakeBridge();
+  const env = { PATH: "/fixture" };
+  const calls = [];
+  const center = createAccountCenter({
+    command: "/fixture/python",
+    scriptPath: "/fixture/zcas.py",
+    env,
+    spawnProcess: (command, args, options) => {
+      calls.push({ command, args, options });
+      return child;
+    },
+    spawnDetached: (command, args, options) => {
+      calls.push({ command, args, options });
+      return { unref: () => {} };
+    },
+  });
+  const pending = center.handle({ action: "account-state" });
+  pending.catch(() => {});
+  center.restart({ action: "account-use", id: "acct_1" });
+  assert.equal(calls[0].options.env, env);
+  assert.equal(calls[1].options.env, env);
+  center.dispose();
+});
