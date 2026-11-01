@@ -764,6 +764,7 @@ try {
     command: readCfgCached().python_path,
     scriptPath: ZCAS,
     env: Object.assign({}, process.env, { ZCAS_DATA_DIR: ZCAS_DATA }),
+    logFile: ZCAS_DATA + "/account-bridge.log",
     log: (...a) => LOG("[account]", ...a),
   });
 } catch (e) { LOG("account center unavailable:", e.message); }

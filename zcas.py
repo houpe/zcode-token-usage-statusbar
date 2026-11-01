@@ -821,8 +821,8 @@ def serve():
         except Exception as error:
             try:
                 action = request.get("action", "unknown") if isinstance(request, dict) else "invalid"
-                with data_dir().mkdir(parents=True, exist_ok=True), \
-                     open(data_dir() / "account-errors.log", "a", encoding="utf-8") as log:
+                data_dir().mkdir(parents=True, exist_ok=True)
+                with open(data_dir() / "account-errors.log", "a", encoding="utf-8") as log:
                     log.write(json.dumps({"time": int(time.time() * 1000), "action": action,
                                           "type": type(error).__name__, "error": str(error),
                                           "trace": traceback.format_exc()}, ensure_ascii=False) + "\n")

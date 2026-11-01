@@ -1,6 +1,7 @@
 "use strict";
 
 const { spawn } = require("child_process");
+const fs = require("fs");
 
 const BRIDGE_ACTIONS = new Set([
   "state", "quota", "capture", "rename", "delete",
@@ -14,6 +15,11 @@ function createAccountCenter(options) {
   const spawnProcess = options.spawnProcess || spawn;
   const spawnDetached = options.spawnDetached || spawn;
   const log = options.log || (() => {});
+  const logFile = options.logFile;
+  const audit = (event) => {
+    if (!logFile) return;
+    try { fs.appendFileSync(logFile, JSON.stringify(event) + "\n"); } catch {}
+  };
   let child = null;
   let buffer = "";
   let sequence = 0;
@@ -62,7 +68,8 @@ function createAccountCenter(options) {
 
   function call(action, req) {
     if (!BRIDGE_ACTIONS.has(action)) return Promise.reject(new Error("未知账号操作: " + action));
-    return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const request = new Promise((resolve, reject) => {
       const id = "account-" + (++sequence);
       const timer = setTimeout(() => {
         pending.delete(id);
@@ -83,6 +90,13 @@ function createAccountCenter(options) {
         reject(error);
       }
     });
+    return request.then(
+      (result) => { audit({ at: started, action, ok: true, ms: Date.now() - started }); return result; },
+      (error) => {
+        audit({ at: started, action, ok: false, ms: Date.now() - started, error: String(error && error.message || error) });
+        throw new Error(`[${action}] ${error && error.message || error}`);
+      },
+    );
   }
 
   function handle(req) {
