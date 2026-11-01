@@ -4590,6 +4590,11 @@
       var t = e.target;
       if (!t || !t.closest) return;
       if (tip.contains(t)) { mouseInBar = true; cancelTipGrace(); return; }   // 鼠标移入 tooltip：保持
+      if (document.querySelector(".zusage-account-panel.zcas-open")) {
+        mouseInBar = false;
+        if (tipFor) hideTip(true, "account-panel");
+        return;
+      }
       if (t.closest(".panel")) {
         /* 面板上不保留条面 tooltip（v42）：开设置的路上触发过条目 tooltip 的话，
          * 这分支若不清掉它，鼠标在面板里它就永不消失。 */
