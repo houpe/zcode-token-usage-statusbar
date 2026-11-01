@@ -76,3 +76,14 @@ test("account cards stay compact and expose icon-only actions accessibly", () =>
   assert.match(source, /iconButton\("plus", "添加账号"\)/);
   assert.doesNotMatch(source, /Start Plan|Coding Plan/);
 });
+
+test("hover account panel uses compact statusbar density", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /\.zusage-account-panel\{[^}]*width:min\(320px/);
+  assert.match(source, /\.zusage-account-panel\{[^}]*font:12px\/1\.35/);
+  assert.match(source, /\.zcas-body\{[^}]*padding:8px/);
+  assert.match(source, /\.zcas-account\{[^}]*padding:8px;margin:0 0 6px\}/);
+  assert.match(source, /\.zcas-name\{[^}]*font-size:13px/);
+  assert.match(source, /\.zcas-meter\{height:3px/);
+  assert.match(source, /\.zcas-status:empty\{display:none\}/);
+});
