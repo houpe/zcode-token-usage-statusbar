@@ -25,7 +25,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-PLUGIN = REPO / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = REPO / "plugins" / "zcode_speed"
 RATE = PLUGIN / "token_rate.py"
 PROMPT_HOOK = PLUGIN / "hooks" / "prompt-submit.py"
 

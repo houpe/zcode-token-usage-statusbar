@@ -55,7 +55,7 @@ def main():
         message = f"zusage 插件自检失败（已忽略）：{e}"
         result = {"suppressOutput": True}
         try:
-            runtime = Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME") or Path.home() / ".zcode/zcode-token-usage-statusbar")
+            runtime = Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME") or Path.home() / ".zcode/zcode_speed")
             (runtime / ".plugin-overlay-optout").stat()
             opted_out = True
         except FileNotFoundError:
@@ -68,7 +68,7 @@ def main():
             result.update(systemMessage=message, hookSpecificOutput={
                 "hookEventName": "SessionStart", "additionalContext": message})
     try:
-        runtime = Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME") or Path.home() / ".zcode/zcode-token-usage-statusbar")
+        runtime = Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME") or Path.home() / ".zcode/zcode_speed")
         record = {"time": time.time(), "pluginRoot": str(PLUGIN_ROOT),
                   "source": payload.get("source", "") if isinstance(payload, dict) else "",
                   "sessionId": os.environ.get("ZCODE_SESSION_ID") or os.environ.get("CLAUDE_SESSION_ID") or "",

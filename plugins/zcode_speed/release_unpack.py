@@ -16,7 +16,7 @@ import unicodedata
 import zipfile
 import zlib
 
-PLUGIN = "zcode-token-usage-statusbar"
+PLUGIN = "zcode_speed"
 PREFIX = "plugins/" + PLUGIN + "/"
 PLUGIN_ID = PLUGIN + "@zusage-marketplace"
 MAX_JSON = 256 * 1024

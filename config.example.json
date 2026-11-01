@@ -27,7 +27,7 @@
         "host_label": "GPU 机"
       }
     ],
-    "script": "~/.zcode/zcode-token-usage-statusbar/zusage.py",
+    "script": "~/.zcode/zcode_speed/zusage.py",
     "python": "python3",
     "timeout_s": 6,
     "poll_ms": 3000,

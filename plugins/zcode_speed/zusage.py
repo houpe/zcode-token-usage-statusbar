@@ -64,7 +64,7 @@ def _load_lang():
     """CLI/MCP 输出语言：config.json 的 "lang"（zh/en，缺省 zh）——与安装器/监控窗口同源。
     查找顺序：脚本目录（--dev/仓库直跑）→ 标准数据目录（标准安装的 config 不在脚本目录）。"""
     for base in (CONFIG_PATH,
-                 Path.home() / ".zcode" / "zcode-token-usage-statusbar" / "config.json"):
+                 Path.home() / ".zcode" / "zcode_speed" / "config.json"):
         try:
             lang = json.loads(base.read_text(encoding="utf-8")).get("lang")
             if lang in ("zh", "en"):
@@ -1492,7 +1492,7 @@ def _auto_targets(cfg):
                 argv.append("--exec")
                 ent = {"ssh_argv": argv, "host_label": f"wsl:{distro or 'default'}", "identities": []}
                 if not explicit_script:
-                    ent["script"] = "~/.zcode/zcode-token-usage-statusbar/zusage.py"
+                    ent["script"] = "~/.zcode/zcode_speed/zusage.py"
                 merged[ck] = ent
         elif kind == "docker":
             container = str(t.get("container") or "").strip()
@@ -1506,7 +1506,7 @@ def _auto_targets(cfg):
                 ent = {"ssh_argv": ["docker", "exec", "-i", container],
                        "host_label": f"docker:{container}", "identities": []}
                 if not explicit_script:
-                    ent["script"] = "~/.zcode/zcode-token-usage-statusbar/zusage.py"
+                    ent["script"] = "~/.zcode/zcode_speed/zusage.py"
                 merged[ck] = ent
         else:
             continue
@@ -1548,7 +1548,7 @@ def _normalize_remote_entry(ent):
         idents = [ent.get("identity")] if ent.get("identity") else []
     return {
         "ssh_argv": ssh_argv,
-        "script": str(ent.get("script") or ".zcode/zcode-token-usage-statusbar/zusage.py"),
+        "script": str(ent.get("script") or ".zcode/zcode_speed/zusage.py"),
         "python": str(ent.get("python") or "python3"),
         "timeout_s": min(6.0, max(1.0, float(ent.get("timeout_s") or 6))),
         "host_label": str(ent.get("host_label") or (ssh_argv[-1] if len(ssh_argv) > 1 else "remote")),

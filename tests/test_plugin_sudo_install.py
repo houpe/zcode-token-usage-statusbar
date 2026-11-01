@@ -20,7 +20,7 @@ from unittest import mock
 
 
 PLUGIN_ROOT = (Path(__file__).resolve().parents[1] / "plugins" /
-               "zcode-token-usage-statusbar")
+               "zcode_speed")
 INSTALLER_PATH = PLUGIN_ROOT / "overlay_install.py"
 spec = importlib.util.spec_from_file_location("sudo_install_overlay", str(INSTALLER_PATH))
 installer = importlib.util.module_from_spec(spec)
@@ -88,14 +88,14 @@ class SudoRuntimeLocationTests(unittest.TestCase):
     def test_default_runtime_uses_sudo_user_home(self):
         self.sudo_env()
         self.assertEqual(installer.default_runtime(),
-                         self.home / ".zcode" / "zcode-token-usage-statusbar")
+                         self.home / ".zcode" / "zcode_speed")
 
     def test_default_runtime_never_uses_root_home_under_sudo(self):
         self.sudo_env()
         self.assertNotEqual(installer.default_runtime(),
-                            Path("/root") / ".zcode" / "zcode-token-usage-statusbar")
+                            Path("/root") / ".zcode" / "zcode_speed")
         self.assertNotEqual(installer.default_runtime(),
-                            (self.root / "root") / ".zcode" / "zcode-token-usage-statusbar")
+                            (self.root / "root") / ".zcode" / "zcode_speed")
 
     def test_default_runtime_keeps_real_home_without_sudo(self):
         # 普通用户（非 sudo）语义不变：仍是自己家目录，不依赖 SUDO_USER。
@@ -104,7 +104,7 @@ class SudoRuntimeLocationTests(unittest.TestCase):
                 mock.patch.object(Path, "home", return_value=fallback), \
                 mock.patch.object(os, "geteuid", return_value=1000):
             self.assertEqual(installer.default_runtime(),
-                             fallback / ".zcode" / "zcode-token-usage-statusbar")
+                             fallback / ".zcode" / "zcode_speed")
 
     def test_unknown_or_absent_sudo_user_falls_back_to_current_home(self):
         fallback = self.root / "fallback"
@@ -114,12 +114,12 @@ class SudoRuntimeLocationTests(unittest.TestCase):
                     mock.patch.dict(os.environ, environment, clear=True), \
                     mock.patch.object(Path, "home", return_value=fallback):
                 self.assertEqual(installer.default_runtime(),
-                                 fallback / ".zcode" / "zcode-token-usage-statusbar")
+                                 fallback / ".zcode" / "zcode_speed")
 
     def test_resolved_runtime_targets_sudo_users_config_not_root(self):
         """端到端：sudo 下定位到的 runtime 就是真实用户装了 config.json 的那个。"""
         user_home = self.root / "user-home"
-        runtime = user_home / ".zcode" / "zcode-token-usage-statusbar"
+        runtime = user_home / ".zcode" / "zcode_speed"
         runtime.mkdir(parents=True)
         (runtime / "config.json").write_text('{"asar_path": "/opt/ZCode/resources/app.asar"}',
                                              encoding="utf-8")

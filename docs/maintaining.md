@@ -19,7 +19,7 @@
 | `plugin-storage.cjs` | 跟随宿主插件存储位置，不假设固定 HOME 路径 |
 | `runtime_lock.py` / `release_unpack.py` | 跨进程锁、可信同步与受限安全解包 |
 | `marketplace.json` | 本地源码市场入口 |
-| `plugins/zcode-token-usage-statusbar/` | 可独立分发的插件包、命令、技能、钩子与运行文件副本 |
+| `plugins/zcode_speed/` | 可独立分发的插件包、命令、技能、钩子与运行文件副本 |
 | `sync_plugin.py` | 从根运行文件同步插件副本，`--check` 检查漂移 |
 | `release_tool.py` | 确定性打包、校验和需授权的 GitHub 发布 |
 | `config.example.json` | 运行设置模板；真实 `config.json` 不入库 |
@@ -40,7 +40,7 @@
 
 ## 运行目录与开发模式
 
-标准安装的运行目录为 `~/.zcode/zcode-token-usage-statusbar/`，包含脚本、个人配置和诊断。标准安装不直接依赖 clone 目录，但**本地插件市场后续更新仍需要其配置的来源目录**，不能一概建议删除源码。
+标准安装的运行目录为 `~/.zcode/zcode_speed/`，包含脚本、个人配置和诊断。标准安装不直接依赖 clone 目录，但**本地插件市场后续更新仍需要其配置的来源目录**，不能一概建议删除源码。
 
 开发时可直接引用仓库：
 
@@ -90,7 +90,7 @@ python3 sync_plugin.py --check
 
 ## 双远程同步
 
-主仓库是 GitHub 的 ByteRax fork；GitCode（`tanranran/zcode-token-usage-statusbar`）是国内镜像。`fork` 远程配置了两条 push URL，`git push fork` 的任意 refspec（分支、tag、渠道分支）都会依次推送 GitHub 与 GitCode；`git fetch fork` 仍只读 GitHub。
+主仓库是 GitHub 的 ByteRax fork；GitCode（`tanranran/zcode_speed`）是国内镜像。`fork` 远程配置了两条 push URL，`git push fork` 的任意 refspec（分支、tag、渠道分支）都会依次推送 GitHub 与 GitCode；`git fetch fork` 仍只读 GitHub。
 
 - `origin` 指向上游 xhwxt，只读；`gitcode` 远程用于单独核对镜像或在主推送被拒时恢复，日常推送不需要单独调用。
 - GitCode HTTPS 推送需要个人访问令牌：首次 `git push fork` 时按提示输入 GitCode 用户名与令牌（令牌作为密码），macOS 钥匙串随后缓存。令牌未配置的机器上 GitCode 段失败，但 GitHub 段可能已推送成功；两段都幂等，补配令牌后重推即可。改用 SSH 须先在 GitCode 登记公钥。
@@ -113,7 +113,7 @@ python3 release_tool.py build --repo OWNER/REPO --out /tmp/zusage-release-build
 
 `OWNER/REPO` 要换成明确的目标仓库。构建生成：
 
-- `zcode-token-usage-statusbar-v版本号.zip`
+- `zcode_speed-v版本号.zip`
 - `release-manifest.json`
 - `marketplace-release.json`
 
@@ -121,7 +121,7 @@ python3 release_tool.py build --repo OWNER/REPO --out /tmp/zusage-release-build
 
 ```bash
 python3 release_tool.py verify --repo OWNER/REPO \
-  --zip /tmp/zusage-release-build/zcode-token-usage-statusbar-v版本号.zip \
+  --zip /tmp/zusage-release-build/zcode_speed-v版本号.zip \
   --manifest /tmp/zusage-release-build/release-manifest.json
 ```
 
@@ -135,11 +135,11 @@ python3 release_tool.py verify --repo OWNER/REPO \
 
 正式发布还需明确 `--publish` 与 `--confirm OWNER/REPO/v版本号`，先上传草稿并核验下载字节，再发布。提交、tag 推送、Release 和渠道清单推送分别需要授权；默认不替用户执行。
 
-GitHub 自动更新要求已注册市场的 `marketplace.json` 指向同一个 Release ZIP/hash。维护者应将生成的 `marketplace-release.json` 作为渠道分支上的 `marketplace.json` 发布。[ByteRax 的 `plugin-releases` 渠道](https://github.com/ByteRax/zcode-token-usage-statusbar/tree/plugin-releases) 已发布 `v1.4.0` 一致清单，新用户注册 `ByteRax/zcode-token-usage-statusbar#plugin-releases`。未来发版须同步更新该清单，不能只上传 Release；不要擅自切换用户已有来源。
+GitHub 自动更新要求已注册市场的 `marketplace.json` 指向同一个 Release ZIP/hash。维护者应将生成的 `marketplace-release.json` 作为渠道分支上的 `marketplace.json` 发布。[ByteRax 的 `plugin-releases` 渠道](https://github.com/ByteRax/zcode_speed/tree/plugin-releases) 已发布 `v1.4.0` 一致清单，新用户注册 `ByteRax/zcode_speed#plugin-releases`。未来发版须同步更新该清单，不能只上传 Release；不要擅自切换用户已有来源。
 
 ### GitCode 更新渠道
 
-国内用户可将市场注册到 `https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode`（宿主按通用 git 来源拉取清单，ZIP 从 GitCode Release 资产下载并核对 SHA256）。发布时在 `publish` 追加 `--gitcode-repo tanranran/zcode-token-usage-statusbar`：
+国内用户可将市场注册到 `https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode`（宿主按通用 git 来源拉取清单，ZIP 从 GitCode Release 资产下载并核对 SHA256）。发布时在 `publish` 追加 `--gitcode-repo tanranran/zcode_speed`：
 
 1. 前提：GitCode 镜像上已有同一个 tag 且指向发布提交。创建 Release 的请求（`tag_name`、`name`、`body`）不带 `target_commitish`，GitCode 官方 API 文档写的是不传则取默认分支的最新提交，缺 tag 时可能据此建出指向错误提交的 tag（未实测）；发布前核对镜像上的 tag（附注 tag 要看 `^{}` 行）：`git ls-remote gitcode 'refs/tags/vX.Y.Z' 'refs/tags/vX.Y.Z^{}' | tail -n 1 | cut -f1` 须等于 `git rev-parse 'vX.Y.Z^{commit}'`，细节见发布技能的「GitCode tag 闸门」。GitHub Release 验收通过后，工具自动在 GitCode 创建（或复用）同 tag Release，正文与 GitHub 一致，上传同一字节的 ZIP 与 `release-manifest.json`，回读逐字节核对，再按真实 `browser_download_url` 生成 `marketplace-release-gitcode.json` 到资产目录。
 2. 将该清单作为 `plugin-releases-gitcode` 分支根目录的 `marketplace.json` 提交并推送（与其它分支一样经双 push URL 同步两台主机；该分支内容刻意与 `plugin-releases` 不同，指向 GitCode 资产 URL）。

@@ -16,7 +16,7 @@ const path = require("path");
 const { createHash } = require("crypto");
 
 const MARK = "__zusageAutoCompactThreshold";
-const PROLOGUE_PREFIX = "/* zcode-token-usage-statusbar v179 auto-compact threshold hook */";
+const PROLOGUE_PREFIX = "/* zcode_speed v179 auto-compact threshold hook */";
 const BACKUP_PREFIX = ".pre-acthreshold-";
 const SENTINEL = "engine-patch.json";
 /* 锚点/replacement 与已装 3.17.1 bundle 逐字节核对（bufferTokens 全 bundle 唯一）。
@@ -32,7 +32,7 @@ const REPLACEMENT = "n=ake(e.bufferTokens)??DBo;return (globalThis." + MARK + "&
  * 1% effective——阈值被压到 0 会让每轮都触发压缩、rapid-refill 熔断中断用户 turn。
  * statSync 每轮决策一次 + mtime 缓存，改 JSON 下一轮即生效。 */
 const PROLOGUE = PROLOGUE_PREFIX + "\n;(function(){try{var _zf=require(\"fs\"),_zp=require(\"path\"),_zh=require(\"os\").homedir();" +
-  "var _ff=_zp.join(_zh,\".zcode\",\"zcode-token-usage-statusbar\",\"autocompact.json\"),_zc={m:0,v:null,bad:false};" +
+  "var _ff=_zp.join(_zh,\".zcode\",\"zcode_speed\",\"autocompact.json\"),_zc={m:0,v:null,bad:false};" +
   "globalThis." + MARK + "=function(eff){try{var st=_zf.statSync(_ff);" +
   "if(st.mtimeMs!==_zc.m){_zc.m=st.mtimeMs;try{_zc.v=JSON.parse(_zf.readFileSync(_ff,\"utf8\"));" +
   "_zc.bad=!_zc.v||typeof _zc.v!==\"object\"||Array.isArray(_zc.v);}catch(e2){_zc.bad=true;}}" +

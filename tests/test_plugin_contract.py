@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = ROOT / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = ROOT / "plugins" / "zcode_speed"
 
 
 def prompt_hook():
@@ -43,7 +43,7 @@ class PluginContractTests(unittest.TestCase):
         tool = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(tool)
         with tempfile.TemporaryDirectory(prefix="zusage-contract-release-") as temporary:
-            result = tool.build(ROOT, "houpe/zcode-token-usage-statusbar", Path(temporary) / "out")
+            result = tool.build(ROOT, "houpe/zcode_speed", Path(temporary) / "out")
             catalog = json.loads(Path(result["catalog"]).read_text(encoding="utf-8"))
             market = json.loads((ROOT / "marketplace.json").read_text(encoding="utf-8"))
             self.assertEqual(catalog["plugins"][0]["description_i18n"],
@@ -56,8 +56,8 @@ class PluginContractTests(unittest.TestCase):
             # 改仓库名/分支/图标路径任一环都应显式改这里，而不是静默 404。
             icon = market["plugins"][0].get("icon", "")
             self.assertEqual(icon,
-                             "https://cdn.jsdelivr.net/gh/houpe/zcode-token-usage-statusbar@main/docs/promo/icon.webp")
-            self.assertTrue((ROOT / "docs/promo/icon.webp").is_file(), icon)
+                             "https://cdn.jsdelivr.net/gh/houpe/zcode-token-usage-statusbar@zcode_speed/docs/promo/zcode_speed-icon.png")
+            self.assertTrue((ROOT / "docs/promo/zcode_speed-icon.png").is_file(), icon)
 
     def test_hook_matcher_and_timeouts_match_host_contract(self):
         hooks = json.loads((PLUGIN / "hooks/hooks.json").read_text(encoding="utf-8"))["hooks"]

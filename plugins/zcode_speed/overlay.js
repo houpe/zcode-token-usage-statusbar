@@ -1046,7 +1046,7 @@
   function isPluginNotice(el) {
     var parent = el.parentElement;
     return document.body.contains(el) && parent && /^(P|BLOCKQUOTE)$/.test(parent.tagName) &&
-      (el.textContent || "").trim().indexOf("🔴 zcode-token-usage-statusbar 插件提醒：") === 0 &&
+      (el.textContent || "").trim().indexOf("🔴 zcode_speed 插件提醒：") === 0 &&
       (parent.textContent || "").trim() === (el.textContent || "").trim() &&
       el.closest('blockquote') && el.closest('[class~="group/assistant-row"]') &&
       !el.closest('pre, code, [data-v4-user-input-bubble], [data-markdown-preview], .zusage-root, .zusage-rate-tip');
@@ -4815,7 +4815,7 @@
       if (relaunchDead) text += "\n" + L("「重启 ZCode」需要新版主进程支持：当前主进程是旧版本，请完全退出 ZCode 后重新打开。", "Restarting ZCode needs a newer main process: the running main process is outdated — quit ZCode completely and reopen it.");
       if (u && u.skipped && u.skipped.length) text += "\n" + L("保留本地热修（未覆盖）：", "Local edits preserved (not overwritten): ") + u.skipped.join(", ");
       /* v140 API 限流兜底也失败时引导显式切 GitCode 渠道（错误签名在 plugin-updater catalogFallback） */
-      if (u && u.phase === "error" && /渠道清单回退/.test(u.error || "")) text += "\n" + L("GitHub API 不可达且清单回退失败；可改用国内 GitCode 镜像渠道：安装或更新 zcode 插件 https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode", "GitHub API is unreachable and the catalog fallback failed; switch to the GitCode mirror: install or update the zcode plugin https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode");
+      if (u && u.phase === "error" && /渠道清单回退/.test(u.error || "")) text += "\n" + L("GitHub API 不可达且清单回退失败；可改用国内 GitCode 镜像渠道：安装或更新 zcode 插件 https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode", "GitHub API is unreachable and the catalog fallback failed; switch to the GitCode mirror: install or update the zcode plugin https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode");
       panel.querySelector(".zu-update-status").textContent = text;
       syncProgress(active ? u : null);
       /* 逐问速率行开关勾选态：state.rateLine 由主进程推送（或 change 时代乐观更新） */
@@ -5440,7 +5440,7 @@
       if (e.target.closest && e.target.closest(".zu-settings-feedback")) {
         /* 优先走客户端 zcode 桥（IPC → 主进程 shell.openExternal，系统默认浏览器）；
            window.open 会被客户端内置浏览器接管，仅作无桥环境兜底 */
-        var zc = window.zcode, issuesUrl = "https://github.com/ByteRax/zcode-token-usage-statusbar/issues";
+        var zc = window.zcode, issuesUrl = "https://github.com/ByteRax/zcode_speed/issues";
         if (zc && typeof zc.openExternal === "function") zc.openExternal(issuesUrl);
         else window.open(issuesUrl, "_blank", "noopener");
         return;

@@ -62,7 +62,7 @@ BAK = ASAR.with_name("app.asar.zusage.bak")
 TMP = ASAR.with_name("app.asar.zusage.tmp")
 TMP_META = TMP.with_name(TMP.name + ".json")
 HERE = Path(__file__).parent.resolve()
-# 运行时目录：install.py 标准安装时指向数据目录（~/.zcode/zcode-token-usage-statusbar，
+# 运行时目录：install.py 标准安装时指向数据目录（~/.zcode/zcode_speed，
 # 经 set_runtime() 切换）；独立运行本脚本或 --dev 安装时保持仓库目录（向后兼容）。
 RUNTIME = HERE
 LOADER = RUNTIME / "inject-main.cjs"
@@ -101,9 +101,9 @@ def L(zh, en):
             except (KeyError, OSError, AttributeError):
                 pass
         bases = [RUNTIME,
-                 Path.home() / ".zcode" / "zcode-token-usage-statusbar"]
+                 Path.home() / ".zcode" / "zcode_speed"]
         if sudo_home:
-            bases.append(sudo_home / ".zcode" / "zcode-token-usage-statusbar")
+            bases.append(sudo_home / ".zcode" / "zcode_speed")
         for base in bases:
             try:
                 lang = json.loads((base / "config.json").read_text(encoding="utf-8")).get("lang")

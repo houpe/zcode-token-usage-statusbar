@@ -128,7 +128,7 @@ class DiscoveryTests(IsolatedTests):
         # wsl --exec 无登录 shell、CWD 不可靠：自动默认脚本带 ~ 前缀；显式 remote.script 优先。
         setup = zusage._remote_setup({})
         self.assertEqual(setup["targets"][setup["identities"][W]]["script"],
-                         "~/.zcode/zcode-token-usage-statusbar/zusage.py")
+                         "~/.zcode/zcode_speed/zusage.py")
         setup = zusage._remote_setup({"remote": {"script": "/opt/custom/zusage.py"}})
         self.assertEqual(setup["targets"][setup["identities"][W]]["script"], "/opt/custom/zusage.py")
 

@@ -52,7 +52,7 @@ def rate_line_enabled():
     运行时目录与 overlay_install.default_runtime() 同源，含 ZUSAGE_PLUGIN_RUNTIME 测试接缝；
     文件缺失/损坏一律视为开启（开关失效不吞功能）。"""
     runtime = Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME")
-                   or Path.home() / ".zcode" / "zcode-token-usage-statusbar")
+                   or Path.home() / ".zcode" / "zcode_speed")
     try:
         cfg = json.loads((runtime / "config.json").read_text(encoding="utf-8"))
     except Exception:

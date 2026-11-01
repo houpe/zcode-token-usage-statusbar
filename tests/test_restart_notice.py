@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode_speed"
 spec = importlib.util.spec_from_file_location("restart_notice_test", PLUGIN / "restart_notice.py")
 notice = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(notice)
@@ -220,14 +220,14 @@ class RestartNoticeTests(unittest.TestCase):
     def test_user_facing_restart_copy_identifies_plugin_and_explains_exit(self):
         notice.record_restart(self.runtime)
         context = notice_context(self.runtime)
-        self.assertIn("zcode-token-usage-statusbar", context)
+        self.assertIn("zcode_speed", context)
         self.assertIn("用量状态条", context)
         self.assertIn("菜单", context)
         self.assertIn("退出", context)
         self.assertNotIn("待重启记录", context)
 
     def test_user_facing_install_copy_avoids_internal_injection_terms(self):
-        self.assertIn("zcode-token-usage-statusbar", notice.INSTALL_MESSAGE)
+        self.assertIn("zcode_speed", notice.INSTALL_MESSAGE)
         self.assertIn("窗口底部", notice.INSTALL_MESSAGE)
         self.assertIn("install-overlay", notice.INSTALL_MESSAGE)
         self.assertNotIn("注入", notice.INSTALL_MESSAGE)
@@ -235,7 +235,7 @@ class RestartNoticeTests(unittest.TestCase):
 
     def test_visible_notice_uses_bold_markdown_and_red_indicator(self):
         context = notice.visible_context("重启提醒", "", notice.MESSAGE)
-        self.assertIn("> **🔴 zcode-token-usage-statusbar 插件提醒：", context)
+        self.assertIn("> **🔴 zcode_speed 插件提醒：", context)
         self.assertIn(notice.MESSAGE + "**\n", context)
         self.assertIn("整条提示加粗", context)
         self.assertNotIn("<span", context)

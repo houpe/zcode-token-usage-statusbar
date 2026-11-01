@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import renderer_bridge as bridge                     # noqa: E402
 import test_renderer_bridge as rb                    # noqa: E402
 
-INSTALLER_PATH = ROOT / "plugins" / "zcode-token-usage-statusbar" / "overlay_install.py"
+INSTALLER_PATH = ROOT / "plugins" / "zcode_speed" / "overlay_install.py"
 
 
 def load_installer():
@@ -226,7 +226,7 @@ class OverlayBridgeNoticeTests(unittest.TestCase):
         self.plugin.mkdir()
         for name in ("patch_install.py", "renderer_bridge.py", "restart_notice.py",
                      "install_monitor.py", "runtime_lock.py"):
-            source = ROOT / "plugins" / "zcode-token-usage-statusbar" / name
+            source = ROOT / "plugins" / "zcode_speed" / name
             if source.exists():
                 (self.plugin / name).write_bytes(source.read_bytes())
         notice_spec = importlib.util.spec_from_file_location(
@@ -424,7 +424,7 @@ class PendingInstallWaitingTests(unittest.TestCase):
         self.plugin.mkdir()
         for name in ("patch_install.py", "renderer_bridge.py", "restart_notice.py",
                      "install_monitor.py", "runtime_lock.py"):
-            source = ROOT / "plugins" / "zcode-token-usage-statusbar" / name
+            source = ROOT / "plugins" / "zcode_speed" / name
             if source.exists():
                 (self.plugin / name).write_bytes(source.read_bytes())
         notice_spec = importlib.util.spec_from_file_location(
@@ -519,14 +519,14 @@ class RealHookChainTests(unittest.TestCase):
                                        b"console.log('official v1');\n" + self.pi.INJECT_LINE.encode()})
         self.installer = load_installer()
         notice_spec = importlib.util.spec_from_file_location(
-            "real_chain_restart_notice", str(ROOT / "plugins" / "zcode-token-usage-statusbar" / "restart_notice.py"))
+            "real_chain_restart_notice", str(ROOT / "plugins" / "zcode_speed" / "restart_notice.py"))
         notice = importlib.util.module_from_spec(notice_spec)
         notice_spec.loader.exec_module(notice)
         patcher = mock.patch.dict(sys.modules, {"restart_notice": notice})
         patcher.start()
         self.addCleanup(patcher.stop)
         patcher = mock.patch.object(self.installer, "PLUGIN_ROOT",
-                                    ROOT / "plugins" / "zcode-token-usage-statusbar")
+                                    ROOT / "plugins" / "zcode_speed")
         patcher.start()
         self.addCleanup(patcher.stop)
         env = mock.patch.dict(os.environ, {"HOME": str(self.root / "home"),

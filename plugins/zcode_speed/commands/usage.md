@@ -6,7 +6,7 @@ argument-hint: [today|week|days:N|sessions|models|session:<id前缀>|workspace:<
 
 取数顺序：
 
-1. 优先调用 MCP 工具 `token_usage`（本插件 zcode-token-usage-statusbar 提供的 stdio server）。
+1. 优先调用 MCP 工具 `token_usage`（本插件 zcode_speed 提供的 stdio server）。
 2. 若该工具不可用（未启用/未注册），退回用 Bash 直接跑 CLI，插件根目录即本命令文件所在目录的上一级：
    `python3 "<插件根目录>/zusage.py" <子命令>`
 

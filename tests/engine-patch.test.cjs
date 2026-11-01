@@ -252,7 +252,7 @@ function runHook(home) {
 }
 function hookEnv() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ztus-hook-home-"));
-  const cfgDir = path.join(root, ".zcode", "zcode-token-usage-statusbar");
+  const cfgDir = path.join(root, ".zcode", "zcode_speed");
   fs.mkdirSync(cfgDir, { recursive: true });
   const file = path.join(cfgDir, "autocompact.json");
   let tick = 0;

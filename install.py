@@ -2,7 +2,7 @@
 """「ZCode Token 用量状态栏」一键安装（标准库实现，零依赖）。
 
 标准安装形态：仓库只是源码，install.py 把运行时复制到数据目录
-  ~/.zcode/zcode-token-usage-statusbar/
+  ~/.zcode/zcode_speed/
 （inject-main.cjs / overlay.js / zusage.py / usage_mcp.py + config.json + diag 诊断产物），
 asar 注入行与 MCP 注册都指向数据目录 —— 之后 clone 目录可以随意搬走或删除，
 已安装实例照常运行，不存在"注入行指向已删除路径"的卸载残留。
@@ -90,10 +90,10 @@ def real_home():
     return Path.home()
 
 
-DATA_DIR = real_home() / ".zcode" / "zcode-token-usage-statusbar"   # 标准安装的数据/运行目录
+DATA_DIR = real_home() / ".zcode" / "zcode_speed"   # 标准安装的数据/运行目录
 ZCODE_CONFIG = real_home() / ".zcode" / "cli" / "config.json"
 COMMANDS_DIR = real_home() / ".zcode" / "commands"
-MCP_NAME = "zcode-token-usage-statusbar"   # MCP server 注册名（与仓库名一致；老安装叫 token-usage/zusage，自动迁移）
+MCP_NAME = "zcode_speed"   # MCP server 注册名（与仓库名一致；老安装叫 token-usage/zusage，自动迁移）
 MCP_NAME_OLD = ("token-usage", "zusage")   # 历史注册名
 # Linux 兜底扫描前缀（目录名含 zcode 的候选仍须过 is_zcode_app 身份门）
 LINUX_FALLBACK_BASES = ("/opt", "/usr/lib", "/usr/local/lib")

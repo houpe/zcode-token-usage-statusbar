@@ -78,8 +78,8 @@
 
 ```bash
 # 1) 放好文件（示例路径）
-sudo mkdir -p /opt/zcode-token-usage-statusbar
-sudo cp -r . /opt/zcode-token-usage-statusbar/          # 整个仓库，sidecar 要用到 ../zusage.py
+sudo mkdir -p /opt/zcode_speed
+sudo cp -r . /opt/zcode_speed/          # 整个仓库，sidecar 要用到 ../zusage.py
 
 # 2) 装服务，改掉里面的 /path/to/... 占位
 sudo cp web/zusage-sidecar.service /etc/systemd/system/

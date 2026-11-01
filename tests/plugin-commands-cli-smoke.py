@@ -11,7 +11,7 @@ import tempfile
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
-PLUGIN = "zcode-token-usage-statusbar"
+PLUGIN = "zcode_speed"
 COMMANDS = ("usage", "install-overlay", "uninstall-overlay")
 SPEC = importlib.util.spec_from_file_location("plugin_cli_smoke", REPOSITORY / "tests/plugin-cli-smoke.py")
 SMOKE = importlib.util.module_from_spec(SPEC)
@@ -101,9 +101,9 @@ const options = { env: process.env, homeDirectory: process.env.HOME, workingDire
   const usage = 'Usage: /plugins [list|enable <plugin>|disable <plugin>|uninstall <plugin> --force]';
   const unsupportedChatCommands = [];
   for (const args of [
-    'marketplace add ByteRax/zcode-token-usage-statusbar#plugin-releases',
-    'marketplace add /absolute/path/to/zcode-token-usage-statusbar',
-    'install zcode-token-usage-statusbar@zusage-marketplace',
+    'marketplace add ByteRax/zcode_speed#plugin-releases',
+    'marketplace add /absolute/path/to/zcode_speed',
+    'install zcode_speed@zusage-marketplace',
     'marketplace update zusage-marketplace',
   ]) {
     for (const alias of ['plugin', 'plugins']) {
@@ -122,7 +122,7 @@ const options = { env: process.env, homeDirectory: process.env.HOME, workingDire
   const descriptor = api.normalizeMcpToolDescriptor(serverName, input.tools[0]);
   assert.equal(descriptor.serverName, serverName);
   assert.equal(descriptor.toolName, 'token_usage');
-  assert.equal(descriptor.name, 'mcp__plugin_zcode-token-usage-statusbar_zusage__token_usage');
+  assert.equal(descriptor.name, 'mcp__plugin_zcode_speed_zusage__token_usage');
   assert.equal(descriptor.name.length, 59);
   assert.ok(descriptor.name.length <= 64);
   const listed = await api.listZCodeCustomCommands(options);
@@ -144,9 +144,9 @@ const options = { env: process.env, homeDirectory: process.env.HOME, workingDire
     expanded.push({ name, disableNonInteractive: command.metadata.disableNonInteractive,
       firstLine: core.prompt.split('\n')[0], argumentCount: core.argumentCount,
       usedArgumentsPlaceholder: core.usedArgumentsPlaceholder, coreMatchesCli: true });
-    const prefixed = '/zcode-token-usage-statusbar:' + name;
+    const prefixed = '/zcode_speed:' + name;
     await assert.rejects(() => api.loadZCodeCustomCommand({ ...options, name: prefixed }),
-      { message: 'Custom command not found: zcode-token-usage-statusbar:' + name });
+      { message: 'Custom command not found: zcode_speed:' + name });
     missing.push(prefixed);
   }
   console.log(JSON.stringify({ listed: listed.commands.map(c => ({ name: c.name,

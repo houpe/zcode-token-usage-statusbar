@@ -14,7 +14,7 @@ from unittest import mock
 
 
 HELPER_PATH = (Path(__file__).resolve().parents[1] / "plugins" /
-               "zcode-token-usage-statusbar" / "plugin_auto_update.py")
+               "zcode_speed" / "plugin_auto_update.py")
 spec = importlib.util.spec_from_file_location("plugin_auto_update", str(HELPER_PATH))
 updater = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(updater)

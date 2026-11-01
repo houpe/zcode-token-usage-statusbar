@@ -16,7 +16,7 @@ if str(PLUGIN_ROOT) not in sys.path:
 from runtime_lock import record_restart as _record_restart
 
 MARKER = ".plugin-restart-required"
-PREFIX = "🔴 zcode-token-usage-statusbar 插件提醒："
+PREFIX = "🔴 zcode_speed 插件提醒："
 RESTART_ACTION = ("请完全退出 ZCode（所有窗口）：从 ZCode 菜单选择「退出」，然后重新打开 ZCode，"
                   "让窗口底部的用量状态条加载新版本。只关窗口、刷新页面或重开会话无效。")
 MESSAGE = PREFIX + "用量状态条已安装或更新。" + RESTART_ACTION
@@ -28,7 +28,7 @@ INSTALL_MESSAGE = (PREFIX + "窗口底部的用量状态条还没有安装好。
 
 def runtime_dir():
     return Path(os.environ.get("ZUSAGE_PLUGIN_RUNTIME") or
-                Path.home() / ".zcode" / "zcode-token-usage-statusbar")
+                Path.home() / ".zcode" / "zcode_speed")
 
 
 def record_restart(runtime, data=None):

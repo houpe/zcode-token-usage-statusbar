@@ -1,0 +1,66 @@
+{
+  "name": "zcode_speed",
+  "version": "1.6.0",
+  "description": "ZCode token usage query via the token_usage MCP tool, /usage command, and skill (reads the local usage DB). Auto-installs the desktop floating usage status bar whenever the client is not injected (always on; legacy auto-install config keys are no longer read; /uninstall-overlay blocks re-injection; modifies app.asar - fully quit and reopen ZCode to take effect). Appends a per-answer rate line at the end of each reply (rendered deterministically via the renderer bridge; tok/s, TTFT, output tokens).",
+  "author": {
+    "name": "houpe"
+  },
+  "homepage": "https://github.com/houpe/zcode_speed",
+  "repository": "https://github.com/houpe/zcode_speed",
+  "license": "MIT",
+  "keywords": [
+    "token",
+    "usage",
+    "statusbar",
+    "monitor",
+    "zusage"
+  ],
+  "commands": "commands",
+  "skills": "skills",
+  "packageLayout": {
+    "schemaVersion": 1,
+    "files": [
+      "LICENSE",
+      "marketplace.json",
+      "plugins/zcode_speed/.claude-plugin/plugin.json",
+      "plugins/zcode_speed/.mcp.json",
+      "plugins/zcode_speed/.zcode-plugin/plugin.json",
+      "plugins/zcode_speed/account-center.cjs",
+      "plugins/zcode_speed/account-center.js",
+      "plugins/zcode_speed/zcas.py",
+      "plugins/zcode_speed/README.md",
+      "plugins/zcode_speed/commands/install-overlay.md",
+      "plugins/zcode_speed/commands/uninstall-overlay.md",
+      "plugins/zcode_speed/commands/usage.md",
+      "plugins/zcode_speed/engine-patch.cjs",
+      "plugins/zcode_speed/hooks/hooks.json",
+      "plugins/zcode_speed/hooks/prompt-submit.py",
+      "plugins/zcode_speed/hooks/session-start.py",
+      "plugins/zcode_speed/inject-main.cjs",
+      "plugins/zcode_speed/install_monitor.py",
+      "plugins/zcode_speed/overlay.js",
+      "plugins/zcode_speed/overlay_install.py",
+      "plugins/zcode_speed/patch_install.py",
+      "plugins/zcode_speed/plugin-release.cjs",
+      "plugins/zcode_speed/plugin-storage.cjs",
+      "plugins/zcode_speed/plugin-updater.cjs",
+      "plugins/zcode_speed/plugin_auto_update.py",
+      "plugins/zcode_speed/quota-client.cjs",
+      "plugins/zcode_speed/model-puller.cjs",
+      "plugins/zcode_speed/release_unpack.py",
+      "plugins/zcode_speed/renderer_bridge.py",
+      "plugins/zcode_speed/restart_notice.py",
+      "plugins/zcode_speed/runtime_lock.py",
+      "plugins/zcode_speed/skills/zcode-token-usage/SKILL.md",
+      "plugins/zcode_speed/token_rate.py",
+      "plugins/zcode_speed/turn-stats.js",
+      "plugins/zcode_speed/usage_mcp.py",
+      "plugins/zcode_speed/usage_stats.py",
+      "plugins/zcode_speed/zusage.py"
+    ]
+  },
+  "description_i18n": {
+    "en": "ZCode token usage query via the token_usage MCP tool, /usage command, and skill (reads the local usage DB). Auto-installs the desktop floating usage status bar whenever the client is not injected (always on; legacy auto-install config keys are no longer read; /uninstall-overlay blocks re-injection; modifies app.asar - fully quit and reopen ZCode to take effect). Appends a per-answer rate line at the end of each reply (rendered deterministically via the renderer bridge; tok/s, TTFT, output tokens).",
+    "zh-CN": "ZCode token 用量查询（token_usage MCP 工具 + /usage 命令 + 技能，读本地 usage 数据库）；桌面客户端未注入时始终尝试自动安装/修复悬浮用量状态条（修改 app.asar，成功后需完全退出并重开；旧自动安装开关不再生效，/uninstall-overlay 可阻止自动重注入）；每次回答末尾自动追加逐问速率行（由前端确定性渲染，依赖 renderer 桥；即时 tok/s 含思考、首字延迟、输出 token、生成耗时、段数/峰值与会话累计，--current 守卫防旧数据充数）。"
+  }
+}

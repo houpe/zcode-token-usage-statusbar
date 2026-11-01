@@ -83,8 +83,8 @@ sheet / popover; changes apply immediately and are remembered.
 
 ```bash
 # 1) place the files
-sudo mkdir -p /opt/zcode-token-usage-statusbar
-sudo cp -r . /opt/zcode-token-usage-statusbar/     # whole repo; the sidecar uses ../zusage.py
+sudo mkdir -p /opt/zcode_speed
+sudo cp -r . /opt/zcode_speed/     # whole repo; the sidecar uses ../zusage.py
 
 # 2) install the service and replace the /path/to/... placeholders
 sudo cp web/zusage-sidecar.service /etc/systemd/system/

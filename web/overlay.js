@@ -334,7 +334,7 @@
   function isPluginNotice(el) {
     var parent = el.parentElement;
     return document.body.contains(el) && parent && /^(P|BLOCKQUOTE)$/.test(parent.tagName) &&
-      (el.textContent || "").trim().indexOf("🔴 zcode-token-usage-statusbar 插件提醒：") === 0 &&
+      (el.textContent || "").trim().indexOf("🔴 zcode_speed 插件提醒：") === 0 &&
       (parent.textContent || "").trim() === (el.textContent || "").trim() &&
       el.closest('blockquote') && el.closest('[class~="group/assistant-row"]') &&
       !el.closest('pre, code, [data-v4-user-input-bubble], [data-markdown-preview], .zusage-root, .zusage-rate-tip');
@@ -2203,7 +2203,7 @@
       if (e.target.closest && e.target.closest(".zu-settings-feedback")) {
         /* 优先走客户端 zcode 桥（IPC → 主进程 shell.openExternal，系统默认浏览器）；
            window.open 会被客户端内置浏览器接管，仅作无桥环境兜底 */
-        var zc = window.zcode, issuesUrl = "https://github.com/ByteRax/zcode-token-usage-statusbar/issues";
+        var zc = window.zcode, issuesUrl = "https://github.com/ByteRax/zcode_speed/issues";
         if (zc && typeof zc.openExternal === "function") zc.openExternal(issuesUrl);
         else window.open(issuesUrl, "_blank", "noopener");
         return;

@@ -18,7 +18,7 @@ from unittest import mock
 
 
 INSTALLER_PATH = (Path(__file__).resolve().parents[1] / "plugins" /
-                  "zcode-token-usage-statusbar" / "overlay_install.py")
+                  "zcode_speed" / "overlay_install.py")
 spec = importlib.util.spec_from_file_location("plugin_overlay_install", str(INSTALLER_PATH))
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)

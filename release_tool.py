@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-PLUGIN = "zcode-token-usage-statusbar"
+PLUGIN = "zcode_speed"
 PREFIX = f"plugins/{PLUGIN}/"
 PLUGIN_ID = f"{PLUGIN}@zusage-marketplace"
 SEMVER = r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"

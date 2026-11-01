@@ -14,7 +14,7 @@ import unittest
 from unittest import mock
 
 
-PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode_speed"
 
 
 def load_module(name, path):

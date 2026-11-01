@@ -1,4 +1,4 @@
-# ZCode Token Usage Statusbar（Token 用量状态栏）
+# zcode_speed（Token 用量状态栏）
 
 在 ZCode 里实时查看模型速度、token 用量、上下文容量、套餐额度与 Git 状态。
 
@@ -29,12 +29,12 @@
 |---|---|
 | Hook | `SessionStart` 同步运行文件、检查更新、未注入时自动安装；`PromptSubmit` 记录提问时间戳并追加逐问速率行。 |
 | MCP 服务 | `.mcp.json` 以 stdio JSON-RPC 启动 `usage_mcp.py`，提供 `token_usage(scope)` 工具，只读本地用量数据库。 |
-| 文件写入 | `~/.zcode/zcode-token-usage-statusbar/`（运行文件、配置、会话状态；凭据文件权限 `0600`）；ZCode 客户端目录内的补丁与备份（`app.asar`）；`~/.zcode/zusage3` 中的浮层设置。卸载插件不删除个人配置。 |
+| 文件写入 | `~/.zcode/zcode_speed/`（运行文件、配置、会话状态；凭据文件权限 `0600`）；ZCode 客户端目录内的补丁与备份（`app.asar`）；`~/.zcode/zusage3` 中的浮层设置。卸载插件不删除个人配置。 |
 | 网络 | 本地统计绝不出本机（只读 SQLite）。套餐额度 chip 默认开启（⚙ 面板可关）：在**内存中**解密宿主持有的 OAuth 凭据，直连 BigModel / Z.ai 用量端点展示套餐额度；凭据绝不写入配置、日志或诊断。插件更新会从已配置来源下载代码。可选的 SSH/WSL 远端查询走你自行配置的连接通道；插件不解密复用宿主密码或私钥口令，也不自动部署。Git chip 只在本机只读执行 `git` 查询（不 fetch、不联网）。 |
 | 执行的命令 | 随插件分发的 Python 脚本；`git`（只读状态查询）；仅对你配置过的远端查询使用 `ssh`/`wsl.exe`。 |
-| 第三方代码 | 不捆绑任何第三方代码——纯 Python 3.8 标准库 + 原生 JavaScript（Electron 主进程 CommonJS）。MIT 许可证；源码在 [ByteRax/zcode-token-usage-statusbar](https://github.com/ByteRax/zcode-token-usage-statusbar)。 |
+| 第三方代码 | 不捆绑任何第三方代码——纯 Python 3.8 标准库 + 原生 JavaScript（Electron 主进程 CommonJS）。MIT 许可证；源码在 [ByteRax/zcode_speed](https://github.com/ByteRax/zcode_speed)。 |
 
-SSH/WSL 远端会话需要在每台远端手工部署同版本 `zusage.py`；远端、额度源与多窗口的完整说明见[用户指南](https://github.com/ByteRax/zcode-token-usage-statusbar/blob/main/docs/user-guide.md)。
+SSH/WSL 远端会话需要在每台远端手工部署同版本 `zusage.py`；远端、额度源与多窗口的完整说明见[用户指南](https://github.com/ByteRax/zcode_speed/blob/main/docs/user-guide.md)。
 
 ## 关闭或移除
 
@@ -49,8 +49,8 @@ SSH/WSL 远端会话需要在每台远端手工部署同版本 `zusage.py`；远
 
 ## 配置
 
-默认运行配置在 `~/.zcode/zcode-token-usage-statusbar/config.json`——只合并需要修改的字段。除上述开关外还覆盖远端目标、额度源与显示选项；见 [`config.example.json`](https://github.com/ByteRax/zcode-token-usage-statusbar/blob/main/config.example.json) 与[用户指南](https://github.com/ByteRax/zcode-token-usage-statusbar/blob/main/docs/user-guide.md)。
+默认运行配置在 `~/.zcode/zcode_speed/config.json`——只合并需要修改的字段。除上述开关外还覆盖远端目标、额度源与显示选项；见 [`config.example.json`](https://github.com/ByteRax/zcode_speed/blob/main/config.example.json) 与[用户指南](https://github.com/ByteRax/zcode_speed/blob/main/docs/user-guide.md)。
 
 ## 源码与许可证
 
-MIT — [ByteRax/zcode-token-usage-statusbar](https://github.com/ByteRax/zcode-token-usage-statusbar)。欢迎中英文 issue 与 PR。
+MIT — [ByteRax/zcode_speed](https://github.com/ByteRax/zcode_speed)。欢迎中英文 issue 与 PR。

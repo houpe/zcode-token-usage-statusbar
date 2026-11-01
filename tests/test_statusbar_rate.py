@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 REPO = Path(__file__).resolve().parent.parent
-PLUGIN = REPO / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = REPO / "plugins" / "zcode_speed"
 if str(PLUGIN) not in sys.path:
     sys.path.append(str(PLUGIN))   # token_rate 依赖同目录的 runtime_lock
 

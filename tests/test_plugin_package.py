@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = ROOT / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = ROOT / "plugins" / "zcode_speed"
 
 
 class PluginPackageTests(unittest.TestCase):

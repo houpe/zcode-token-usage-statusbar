@@ -11,7 +11,7 @@ hook 用法：hooks/session-start.py 调 run_hook()，stdout 只输出 hook 协�
 
 与仓库根 install.py 的关系：根目录文件是正本，本插件目录里的运行时文件是
 sync_plugin.py 生成的副本；本脚本把副本同步进稳定运行时目录
-~/.zcode/zcode-token-usage-statusbar/（mtime 保护较新手改，升级时以记录 hash 识别托管文件），
+~/.zcode/zcode_speed/（mtime 保护较新手改，升级时以记录 hash 识别托管文件），
 再对运行时目录执行 patch_install.set_runtime() + install()——注入行指向稳定目录而非
 插件缓存目录，插件升级换缓存目录不会让浮层失联。
 
@@ -89,7 +89,7 @@ def real_home():
 
 
 def default_runtime():
-    return real_home() / ".zcode" / "zcode-token-usage-statusbar"
+    return real_home() / ".zcode" / "zcode_speed"
 
 
 SYSTEM_NODE_LOCATIONS = ("/usr/local/bin/node", "/usr/bin/node", "/usr/bin/nodejs")
@@ -420,7 +420,7 @@ function migrate() {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("同步验收记录不是 JSON 对象: " + file);
     return value;
   };
-  const root = fs.realpathSync(pluginRoot), id = "zcode-token-usage-statusbar@zusage-marketplace";
+  const root = fs.realpathSync(pluginRoot), id = "zcode_speed@zusage-marketplace";
   const manifest = readObject(path.join(root, ".zcode-plugin", "plugin.json"), null);
   if (!manifest || manifest.name !== id.split("@")[0]) throw Error("同步插件清单身份无效");
   updater.compareVersions(manifest.version, manifest.version);
@@ -472,7 +472,7 @@ function migrate() {
       release.validateManifest(m, validated);
       if (r.catalogSha256 !== undefined && m.asset.sha256 !== r.catalogSha256) throw Error("发布 manifest 与渠道清单的 SHA256 不一致，停止运行时同步");
       const source = record.source;
-      if (record.version !== r.version || !source || source.url !== r.archive.browser_download_url || source.sha256 !== m.asset.sha256 || source.source !== "url" || source.type !== "zip" || source.path !== "plugins/zcode-token-usage-statusbar" || (source.stripRoot !== undefined && source.stripRoot !== false) || source.headers !== undefined) throw Error("官方安装结果与选定 Release 不一致，停止运行时同步");
+      if (record.version !== r.version || !source || source.url !== r.archive.browser_download_url || source.sha256 !== m.asset.sha256 || source.source !== "url" || source.type !== "zip" || source.path !== "plugins/zcode_speed" || (source.stripRoot !== undefined && source.stripRoot !== false) || source.headers !== undefined) throw Error("官方安装结果与选定 Release 不一致，停止运行时同步");
     } else if (channel.kind === "release") throw Error("历史更新意图缺少 Release 校验信息，停止运行时同步");
   }
   return { ok: true, pluginRoot: root, identity: { record, channel, pending, manifest } };

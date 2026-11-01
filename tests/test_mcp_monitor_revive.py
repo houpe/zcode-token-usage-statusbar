@@ -35,7 +35,7 @@ class ReviveMonitorTests(unittest.TestCase):
         self.addCleanup(home.stop)
         self.asar = self.root / "app.asar"
         self.asar.write_bytes(b"official version")
-        self.data_dir = self.home / ".zcode" / "zcode-token-usage-statusbar"
+        self.data_dir = self.home / ".zcode" / "zcode_speed"
         self.data_dir.mkdir(parents=True)
         self.runtime = self.root / "runtime"
         self.runtime.mkdir()

@@ -21,13 +21,13 @@
 通过客户端界面操作，无需系统 PATH 中有 `zcode`：
 
 1. 打开 **设置 → 插件 → 添加插件市场**；某些版本入口在「发现」页的 **+**。
-2. 输入 `https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases`，添加市场。
-3. 找到 **ZCode Token Usage Statusbar**，安装到用户范围并启用。
+2. 输入 `https://github.com/ByteRax/zcode_speed#plugin-releases`，添加市场。
+3. 找到 **zcode_speed**，安装到用户范围并启用。
 
 GitHub 访问受限时，第 2 步改用 GitCode 渠道地址（结尾 `.git` 不能省，本机需装有 Git）：
 
 ```text
-https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode
+https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode
 ```
 
 两条渠道提供同一份经过校验的正式 Release；注册哪个地址，之后的版本检查和下载就在哪个渠道进行，⚙ 面板的「更新来源」会显示当前渠道。
@@ -36,11 +36,11 @@ https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gi
 
 ### 方式二：本地目录安装
 
-从 [ByteRax 仓库](https://github.com/ByteRax/zcode-token-usage-statusbar) 下载或克隆源码后：
+从 [ByteRax 仓库](https://github.com/ByteRax/zcode_speed) 下载或克隆源码后：
 
 1. 打开 **设置 → 插件 → 添加插件市场**，点击 **选择目录**。
 2. 选择包含 `marketplace.json` 的仓库根目录（不是 `plugins/` 子目录），添加市场。
-3. 找到 **ZCode Token Usage Statusbar**，安装到用户范围并启用。
+3. 找到 **zcode_speed**，安装到用户范围并启用。
 
 ![添加插件市场：远程方式填写 GitHub 地址，本地方式点击「选择目录」](plugin-marketplace-add.png)
 
@@ -49,7 +49,7 @@ https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gi
 「按 README 的方式 A（远程市场）装完却什么都没有」先分清是插件没装上，还是状态条没注入：注册市场和安装插件这两步失败时可能**不留任何痕迹**。市场注册要从注册地址克隆仓库，国内直连 GitHub 超时就会卡在这一步，失败提示也未必醒目——没看到报错不等于成功了。逐项核对：
 
 1. **市场注册**：默认位置 `~/.zcode/cli/plugins/known_marketplaces.json` 含 `zusage-marketplace`，**设置 → 插件**里能看到该市场（宿主使用自定义插件存储时以实际位置为准）。
-2. **插件安装**：默认位置 `~/.zcode/cli/plugins/installed_plugins.json` 含 `zcode-token-usage-statusbar@zusage-marketplace`，插件页显示已安装并启用。
+2. **插件安装**：默认位置 `~/.zcode/cli/plugins/installed_plugins.json` 含 `zcode_speed@zusage-marketplace`，插件页显示已安装并启用。
 3. **状态条注入**：新建或恢复会话触发自动安装，成功后完全退出并重开 ZCode；有仓库克隆的话可用 `overlay_install.py check` 确认注入状态（见[排查](#排查)）。
 
 前两项任一缺失，重启和 `/install-overlay` 都救不了——那是「零痕迹 + 状态条不出现」的形态，先重新走[方式一](#方式一远程安装无需下载源码)：GitHub 直连超时的机器注册 GitCode 镜像渠道，两条渠道装的是同一份经过校验的正式 Release。
@@ -70,9 +70,9 @@ Windows 找不到 `python3` 时插件 hook 会自动回退：hook 命令按 `pyt
 
 ### 正式 Release 渠道
 
-[`plugin-releases` 分支](https://github.com/ByteRax/zcode-token-usage-statusbar/tree/plugin-releases) 的市场清单指向当前正式 Release。新用户请在添加市场界面使用 `https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases`，具体版本以该清单为准。
+[`plugin-releases` 分支](https://github.com/ByteRax/zcode_speed/tree/plugin-releases) 的市场清单指向当前正式 Release。新用户请在添加市场界面使用 `https://github.com/ByteRax/zcode_speed#plugin-releases`，具体版本以该清单为准。
 
-GitHub 访问受限时可注册 GitCode 镜像渠道 `https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode`：清单由同一份发布产物生成，ZIP 与 SHA256 和 GitHub Release 完全一致，版本检查、下载与安装全部在 GitCode 完成。该渠道要求本机装有 Git（宿主通过 git 拉取渠道清单）。
+GitHub 访问受限时可注册 GitCode 镜像渠道 `https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode`：清单由同一份发布产物生成，ZIP 与 SHA256 和 GitHub Release 完全一致，版本检查、下载与安装全部在 GitCode 完成。该渠道要求本机装有 Git（宿主通过 git 拉取渠道清单）。
 
 清单指向正式 ZIP，包含 SHA256 与插件子目录；下载时核对 Release manifest、版本与包内容，安装后再复核宿主安装记录与所选 Release 一致。后续正式版本仍需维护者同步发布渠道清单：Release 已发布而渠道清单尚未更新的几分钟内，宿主按旧清单安装不会前进到新版本，更新会报「插件管理器未提交新版安装记录」，稍后再点即可。
 
@@ -83,7 +83,7 @@ GitHub 访问受限时可注册 GitCode 镜像渠道 `https://gitcode.com/tanran
 市场名仍是 `zusage-marketplace`，但来源从默认分支/本地目录变为 `#plugin-releases`。**已安装用户不会自动切换，也不必为了添加分支卸载浮层。** 想迁移时：
 
 1. 先关闭插件自动更新，等待正在进行的更新结束，记下现有市场来源。
-2. 打开 **设置 → 插件 → 发现 → +（添加插件市场）**，填写 `https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases`。通过市场管理确认并切换同名市场来源；不支持同名来源替换时，先移除旧市场注册再添加正式地址，**无需卸载插件或浮层**。
+2. 打开 **设置 → 插件 → 发现 → +（添加插件市场）**，填写 `https://github.com/ByteRax/zcode_speed#plugin-releases`。通过市场管理确认并切换同名市场来源；不支持同名来源替换时，先移除旧市场注册再添加正式地址，**无需卸载插件或浮层**。
 3. 在市场管理中确认 `zusage-marketplace` 指向新地址，来源的 `ref` 为 `plugin-releases`，再刷新市场并在插件页按需更新。不要只看到插件已安装就假定来源已切换。
 4. 确认正式包可读取后，按自己的偏好开启自动更新。更新涉及主进程文件时，完全退出并重开 ZCode。
 
@@ -98,8 +98,8 @@ GitHub 访问受限时可注册 GitCode 镜像渠道 `https://gitcode.com/tanran
 不通过插件时，先安装 Python 和 Git，在系统终端执行：
 
 ```bash
-git clone https://github.com/ByteRax/zcode-token-usage-statusbar.git
-cd zcode-token-usage-statusbar
+git clone https://github.com/ByteRax/zcode_speed.git
+cd zcode_speed
 python install.py
 ```
 
@@ -139,7 +139,7 @@ python3 install.py --root /Applications/ZCode.app
 
 1. 远程安装无需更新本地源码；本地目录安装需先自行获取最新源码。
 2. 打开 **设置 → 插件**，在市场管理中刷新 `zusage-marketplace`。
-3. 到 **已安装** 更新 **ZCode Token Usage Statusbar**。
+3. 到 **已安装** 更新 **zcode_speed**。
 4. 新建或恢复会话；若提示主进程文件变化，再完全退出并重开 ZCode。
 
 本地目录市场**不会执行 `git pull`**。ZCode 使用的是独立安装副本，修改仓库不等于完成插件更新。
@@ -182,10 +182,10 @@ python install.py
 优先用状态条的 **⚙** 调整。需要直接编辑时，默认位置是：
 
 ```text
-~/.zcode/zcode-token-usage-statusbar/config.json
+~/.zcode/zcode_speed/config.json
 ```
 
-Windows 对应用户目录下的 `.zcode\zcode-token-usage-statusbar\config.json`。下面是常用设置示例，**只修改需要的字段，保留现有配置**：
+Windows 对应用户目录下的 `.zcode\zcode_speed\config.json`。下面是常用设置示例，**只修改需要的字段，保留现有配置**：
 
 ```json
 {
@@ -262,20 +262,20 @@ token 数量单位默认跟随 **⚙ → 通用 →「中文单位（万/亿）�
 
 ### 前置准备：远端脚本需手工部署
 
-每台远端需部署与本机匹配的 `zusage.py`，默认路径 `~/.zcode/zcode-token-usage-statusbar/zusage.py`。远端需要 Python 3.8+（含标准库 `sqlite3`），并让执行脚本的用户能读取其 ZCode 数据库。SSH 示例在**本机仓库目录**执行；请替换连接地址：
+每台远端需部署与本机匹配的 `zusage.py`，默认路径 `~/.zcode/zcode_speed/zusage.py`。远端需要 Python 3.8+（含标准库 `sqlite3`），并让执行脚本的用户能读取其 ZCode 数据库。SSH 示例在**本机仓库目录**执行；请替换连接地址：
 
 ```bash
-ssh user@server 'mkdir -p ~/.zcode/zcode-token-usage-statusbar'
-scp zusage.py user@server:.zcode/zcode-token-usage-statusbar/zusage.py
-ssh -o BatchMode=yes user@server 'python3 ~/.zcode/zcode-token-usage-statusbar/zusage.py today'
+ssh user@server 'mkdir -p ~/.zcode/zcode_speed'
+scp zusage.py user@server:.zcode/zcode_speed/zusage.py
+ssh -o BatchMode=yes user@server 'python3 ~/.zcode/zcode_speed/zusage.py today'
 ```
 
 WSL 远端的脚本与数据都在发行版内部（Windows 侧 `%USERPROFILE%\.zcode` 没有远程会话数据），从 Windows 拷入发行版并验证：
 
 ```powershell
-wsl.exe -d Ubuntu --exec mkdir -p ~/.zcode/zcode-token-usage-statusbar
-copy zusage.py \\wsl.localhost\Ubuntu\home\<user>\.zcode\zcode-token-usage-statusbar\zusage.py
-wsl.exe -d Ubuntu --exec python3 ~/.zcode/zcode-token-usage-statusbar/zusage.py today
+wsl.exe -d Ubuntu --exec mkdir -p ~/.zcode/zcode_speed
+copy zusage.py \\wsl.localhost\Ubuntu\home\<user>\.zcode\zcode_speed\zusage.py
+wsl.exe -d Ubuntu --exec python3 ~/.zcode/zcode_speed/zusage.py today
 ```
 
 最后一条只验证远端脚本/数据库可读，不证明桌面身份路由或所有服务器已实机验收。自定义远端安装位置时设置 `remote.script`。远端查询带递归防护，无需在远端安装桌面状态条或再次启用远端转发。
@@ -291,7 +291,7 @@ wsl.exe -d Ubuntu --exec python3 ~/.zcode/zcode-token-usage-statusbar/zusage.py 
   "remote": {
     "auto": true,
     "enabled": false,
-    "script": "~/.zcode/zcode-token-usage-statusbar/zusage.py",
+    "script": "~/.zcode/zcode_speed/zusage.py",
     "python": "python3",
     "timeout_s": 6,
     "poll_ms": 3000
@@ -322,7 +322,7 @@ wsl.exe -d Ubuntu --exec python3 ~/.zcode/zcode-token-usage-statusbar/zusage.py 
   "remote": {
     "auto": true,
     "enabled": false,
-    "script": "~/.zcode/zcode-token-usage-statusbar/zusage.py",
+    "script": "~/.zcode/zcode_speed/zusage.py",
     "python": "python3",
     "timeout_s": 6,
     "poll_ms": 3000,
@@ -360,7 +360,7 @@ WSL 目标示例同时绑定两种客户端形态的身份：3.15.x 的 `remote:
     "auto": false,
     "enabled": true,
     "ssh": "ssh user@server",
-    "script": "~/.zcode/zcode-token-usage-statusbar/zusage.py",
+    "script": "~/.zcode/zcode_speed/zusage.py",
     "python": "python3",
     "timeout_s": 6,
     "poll_ms": 3000,
@@ -446,7 +446,7 @@ python zusage.py watch
 在仓库目录可运行状态检查（不修改注入；已注入时可能生成临时语法检查文件并调用客户端可执行文件）：
 
 ```bash
-python3 plugins/zcode-token-usage-statusbar/overlay_install.py check
+python3 plugins/zcode_speed/overlay_install.py check
 python3 patch_install.py check
 ```
 
@@ -460,7 +460,7 @@ python3 patch_install.py check
 
 1. 如果使用插件，在 ⚙ 关闭自动更新；没有状态条时在现有配置中设置 `plugin_auto_update: false`。等待已经开始的更新结束。
 2. 在插件仍启用时执行 `/uninstall-overlay`，确认成功。这会移除注入并留下阻止重注入的标记。
-3. 在 **设置 → 插件 → 已安装 → ZCode Token Usage Statusbar → ⋯ → 卸载**。这是卸载插件组件，不负责移除外部状态条与个人配置。
+3. 在 **设置 → 插件 → 已安装 → zcode_speed → ⋯ → 卸载**。这是卸载插件组件，不负责移除外部状态条与个人配置。
 4. 完全退出并重开 ZCode，确认状态条消失。若此前也用一键安装器注册过 `/usage`，在插件卸载后运行 `python install.py --remove` 清理独立注册与运行目录，再重启确认。
 5. 不再需要插件市场时，在设置里移除 `zusage-marketplace`。保留供其它插件使用的市场和目录，不要删除整个 `.zcode`。
 6. 备份想保留的 `config.json`，检查并删除本项目残留。
@@ -470,7 +470,7 @@ python3 patch_install.py check
 插件已卸载才想起移除状态条？从仍保留的仓库执行：
 
 ```bash
-python3 plugins/zcode-token-usage-statusbar/overlay_install.py remove
+python3 plugins/zcode_speed/overlay_install.py remove
 ```
 
 仅一键安装的用户直接执行 `python install.py --remove`，无需操作插件页。
@@ -480,8 +480,8 @@ python3 plugins/zcode-token-usage-statusbar/overlay_install.py remove
 以下为**默认位置**。ZCode 支持自定义 `storage.dir` / `ZCODE_STORAGE_DIR`，不要把默认路径当作全部安装的固定位置；按自己的设置查找。
 
 - 客户端 `app.asar`：用 `patch_install.py check` 确认未注入，而不是删除该文件。
-- 运行目录 `~/.zcode/zcode-token-usage-statusbar/`：脚本、个人设置、诊断与卸载标记。
-- 插件缓存 `~/.zcode/cli/plugins/cache/zusage-marketplace/zcode-token-usage-statusbar/`：GUI 操作后检查是否残留，不要假定所有宿主版本都会清理同样的目录层级。
+- 运行目录 `~/.zcode/zcode_speed/`：脚本、个人设置、诊断与卸载标记。
+- 插件缓存 `~/.zcode/cli/plugins/cache/zusage-marketplace/zcode_speed/`：GUI 操作后检查是否残留，不要假定所有宿主版本都会清理同样的目录层级。
 - 市场缓存 `~/.zcode/cli/plugins/marketplaces/zusage-marketplace/`：与市场注册分开检查，本地目录市场可能保留源码副本。
 - 插件数据目录：按宿主显示的 `dataPath` 检查，不猜测固定子路径。
 - 回答速率状态 `~/.zcode/zusage-rate.last-session.json` 及其 `.lock`：不在运行目录中，若保留过其它安装或多个会话，先确认没有继续使用它。

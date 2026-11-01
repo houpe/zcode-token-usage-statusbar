@@ -79,7 +79,7 @@ function harness(lang = 'zh', rateLine = true) {
   const executable = source.replace(/\}\)\(\);\s*$/, 'window.rateTest = { language: function(lang) { state.lang = lang; renderAll(true); } };})();');
   function inject() { window.__zusageOverlay = false; vm.runInContext(executable, sandbox); }
   inject();
-  function addNotice(text = '🔴 zcode-token-usage-statusbar 插件提醒：请退出并重新打开 ZCode。') {
+  function addNotice(text = '🔴 zcode_speed 插件提醒：请退出并重新打开 ZCode。') {
     // Renderer v3t/Xit/_ot: group/assistant-row > selectable div > blockquote > p > strong.
     const row = body.appendChild(new Element('div')); row.className = 'group/assistant-row';
     const content = row.appendChild(new Element('div')); content.dataset.conversationSelectable = 'true';

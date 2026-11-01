@@ -4,7 +4,7 @@
 
 **让 ZCode 的对话窗口底部多一条小状态栏：模型有多快、token 花了多少、上下文还剩多少，一眼看到。**
 
-给 [ZCode](https://zcode.z.ai) 桌面版用的第三方插件（不是官方功能），市场里的名字叫 **ZCode Token Usage Statusbar**。顺带送你一个命令行工具和一个 MCP 工具，随时能翻历史用量——不知道 MCP 是什么也没关系，不用它照样好用。
+给 [ZCode](https://zcode.z.ai) 桌面版用的第三方插件（不是官方功能），市场里的名字叫 **zcode_speed**。顺带送你一个命令行工具和一个 MCP 工具，随时能翻历史用量——不知道 MCP 是什么也没关系，不用它照样好用。
 
 A ZCode plugin for token usage monitoring, generation speed and context window tracking.
 
@@ -21,7 +21,7 @@ Windows / macOS · Python 3.8+ · [MIT](LICENSE)
 **三步装上：**把下面这句话发给 ZCode：
 
 ```text
-安装或者更新 zcode 插件 https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases，执行完毕后，运行命令 /install-overlay
+安装或者更新 zcode 插件 https://github.com/ByteRax/zcode_speed#plugin-releases，执行完毕后，运行命令 /install-overlay
 ```
 
 确认插件已安装并启用，再确认 `/install-overlay` 执行成功；如果它没自己跑，就在对话框里手动敲一次。这一步会**修改 ZCode 的 `app.asar` 程序文件**。成功后**完全退出 ZCode 再重新打开**（关窗口不算），并检查底部状态栏是否出现；安装失败或权限不足时需先排查。句尾的 `#plugin-releases` 表示装的是正式发布的稳定版本，⚙ 里能自动更新，别把它删掉。
@@ -29,12 +29,12 @@ Windows / macOS · Python 3.8+ · [MIT](LICENSE)
 国内访问 GitHub 受限？上面那句可能连不上，换成这句再发给 ZCode（结尾的 `.git` 不能省，本机要装有 [Git](https://git-scm.com/downloads)）：
 
 ```text
-安装或者更新 zcode 插件 https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode，执行完毕后，运行命令 /install-overlay
+安装或者更新 zcode 插件 https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode，执行完毕后，运行命令 /install-overlay
 ```
 
 [快速开始](#快速开始) · [常见问题](#常见问题) · [功能图示](docs/features.md)
 
-> 本页以 `main` 分支代码为准，可能包含尚未发布的功能；稳定渠道以 [GitHub Releases](https://github.com/ByteRax/zcode-token-usage-statusbar/releases) 对应版本为准。以下标记「开发版」的功能在 v1.5.7 稳定版中不可用或行为不同。
+> 本页以 `main` 分支代码为准，可能包含尚未发布的功能；稳定渠道以 [GitHub Releases](https://github.com/ByteRax/zcode_speed/releases) 对应版本为准。以下标记「开发版」的功能在 v1.5.7 稳定版中不可用或行为不同。
 
 ---
 
@@ -122,13 +122,13 @@ token_usage(scope="session:ID前缀") # MCP：指定会话明细
 推荐**插件**方式：在 ZCode 里打开 **设置 → 插件 → 添加插件市场**，粘贴市场地址：
 
 ```text
-https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
+https://github.com/ByteRax/zcode_speed#plugin-releases
 ```
 
-添加后在这个市场里安装 **ZCode Token Usage Statusbar** 并启用。国内直连 GitHub 超时的机器，把地址换成 GitCode 渠道（结尾 `.git` 不能省）：
+添加后在这个市场里安装 **zcode_speed** 并启用。国内直连 GitHub 超时的机器，把地址换成 GitCode 渠道（结尾 `.git` 不能省）：
 
 ```text
-https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode
+https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode
 ```
 
 也可以把 README 开头「三步装上」那句自然语言指令发给 AI，让它替你完成市场添加与插件安装（AI 走终端命令，效果一致）。其它装法：想自己改代码，用「**设置 → 插件 → 添加插件市场 → 选择目录**」指向仓库根目录；不想装插件，终端里 `git clone` 后跑 `python install.py` 一键安装；自托管 ZCode 服务器另有独立部署的 [Web 版](web/README.zh-CN.md)，不适用于官方托管网页。四种装法**选一个就行，别叠着来**，逐步说明见[安装指南](docs/user-guide.md#插件安装)。
@@ -180,7 +180,7 @@ ZCode 更新时会把状态条改过的程序文件覆盖回原样。保持插�
 
 **一键安装的**：仓库目录里跑 `python install.py --remove`（macOS 用 `python3`），然后完全退出重开 ZCode。
 
-**插件装的**：① ⚙ 里关掉自动更新 → ② 跑 `/uninstall-overlay` 确认成功 → ③ **设置 → 插件 → 已安装 → ZCode Token Usage Statusbar → ⋯ → 卸载** → ④ 完全退出重开 ZCode，确认状态条没了。别只删插件把状态条留在那儿。要把设置、缓存、插件市场一起清掉，见[彻底清理步骤](docs/user-guide.md#彻底卸载)。
+**插件装的**：① ⚙ 里关掉自动更新 → ② 跑 `/uninstall-overlay` 确认成功 → ③ **设置 → 插件 → 已安装 → zcode_speed → ⋯ → 卸载** → ④ 完全退出重开 ZCode，确认状态条没了。别只删插件把状态条留在那儿。要把设置、缓存、插件市场一起清掉，见[彻底清理步骤](docs/user-guide.md#彻底卸载)。
 
 ## 更多文档
 
@@ -192,4 +192,4 @@ ZCode 更新时会把状态条改过的程序文件覆盖回原样。保持插�
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=ByteRax/zcode-token-usage-statusbar&type=Date)](https://www.star-history.com/#ByteRax/zcode-token-usage-statusbar&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ByteRax/zcode_speed&type=Date)](https://www.star-history.com/#ByteRax/zcode_speed&Date)

@@ -17,7 +17,7 @@ import unittest
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = ROOT / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = ROOT / "plugins" / "zcode_speed"
 
 
 @unittest.skipUnless(shutil.which("node"), "需要 Node 运行真实离线验收")
@@ -34,7 +34,7 @@ class RuntimeSyncGuardTests(unittest.TestCase):
         self.plugin = self.root / "installed"
         (self.plugin / ".zcode-plugin").mkdir(parents=True)
         self.version = "1.1.0"
-        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode-token-usage-statusbar", "version": self.version})
+        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode_speed", "version": self.version})
         spec = importlib.util.spec_from_file_location("sync_guard_installer", PLUGIN / "overlay_install.py")
         self.installer = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.installer)
@@ -42,24 +42,24 @@ class RuntimeSyncGuardTests(unittest.TestCase):
             (self.plugin / name).write_bytes(("new package:" + name).encode())
         for name in ("plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs", "runtime_lock.py"):
             shutil.copy2(ROOT / name, self.runtime / name)
-        self.source = {"source": "github", "repo": "ByteRax/zcode-token-usage-statusbar", "ref": "plugin-releases"}
+        self.source = {"source": "github", "repo": "ByteRax/zcode_speed", "ref": "plugin-releases"}
         self.write(self.storage / "known_marketplaces.json", {"marketplaces": [
             {"id": "zusage-marketplace", "source": self.source}]})
         repo = self.source["repo"]
         base = "https://github.com/" + repo + "/releases/download/v1.1.0/"
-        archive = {"name": "zcode-token-usage-statusbar-v1.1.0.zip", "size": 11,
-                   "state": "uploaded", "browser_download_url": base + "zcode-token-usage-statusbar-v1.1.0.zip"}
+        archive = {"name": "zcode_speed-v1.1.0.zip", "size": 11,
+                   "state": "uploaded", "browser_download_url": base + "zcode_speed-v1.1.0.zip"}
         manifest_asset = {"name": "release-manifest.json", "size": 400,
                           "state": "uploaded", "browser_download_url": base + "release-manifest.json"}
         release = {"repository": repo, "version": "1.1.0", "tag": "v1.1.0", "archive": archive,
                    "manifest": manifest_asset, "url": "https://github.com/" + repo + "/releases/tag/v1.1.0"}
         manifest = {"schemaVersion": 1, "repository": repo, "version": "1.1.0", "tag": "v1.1.0",
-                    "pluginId": "zcode-token-usage-statusbar@zusage-marketplace", "asset": {
+                    "pluginId": "zcode_speed@zusage-marketplace", "asset": {
                         "name": archive["name"], "size": 11, "sha256": hashlib.sha256(b"release zip").hexdigest()}}
         self.record = {"id": manifest["pluginId"], "scope": "user", "version": self.version,
                        "installPath": str(self.plugin), "source": {"source": "url", "type": "zip",
                         "url": archive["browser_download_url"], "sha256": manifest["asset"]["sha256"],
-                        "path": "plugins/zcode-token-usage-statusbar", "stripRoot": False}}
+                        "path": "plugins/zcode_speed", "stripRoot": False}}
         self.pending = {"pendingSync": True, "pendingVersion": "1.0.0", "pendingPid": 0,
                         "pendingRelease": {"release": release, "manifest": manifest,
                             "channel": {"kind": "release", "repository": repo, "source": self.source.copy()}}}
@@ -97,7 +97,7 @@ class RuntimeSyncGuardTests(unittest.TestCase):
 
     def test_all_sync_entries_reject_wrong_release_without_copying_updater(self):
         self.record["version"] = "1.2.0"
-        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode-token-usage-statusbar", "version": "1.2.0"})
+        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode_speed", "version": "1.2.0"})
         self.save_state()
         self.assert_rejected()
         pi = mock.Mock()
@@ -188,13 +188,17 @@ class RuntimeSyncGuardTests(unittest.TestCase):
 
     def test_uncommitted_pending_version_cannot_sync_old_cache(self):
         self.record["version"] = "1.0.0"
-        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode-token-usage-statusbar", "version": "1.0.0"})
+        self.write(self.plugin / ".zcode-plugin" / "plugin.json", {"name": "zcode_speed", "version": "1.0.0"})
         self.save_state()
         self.assert_rejected()
 
     def use_head_runtime(self):
         for name in ("plugin-updater.cjs", "plugin-release.cjs", "plugin-storage.cjs"):
             data = subprocess.check_output(["git", "-C", str(ROOT), "show", "HEAD:" + name])
+            # HEAD is the previous runtime generation. The plugin identity rename is a
+            # reinstall boundary, so this fixture models the prior generation under the
+            # new identity instead of testing an unsupported old-ID-to-new-ID jump.
+            data = data.replace(b"zcode-token-usage-statusbar", b"zcode_speed")
             (self.runtime / name).write_bytes(data)
         self.write(self.runtime / "plugin-runtime.json", {
             "version": "1.0.0", "plugin_root": str(self.root / "old-installed"),
@@ -255,7 +259,7 @@ class RuntimeSyncGuardTests(unittest.TestCase):
         self.use_head_runtime()
         self.record["version"] = "1.2.0"
         self.write(self.plugin / ".zcode-plugin" / "plugin.json", {
-            "name": "zcode-token-usage-statusbar", "version": "1.2.0"})
+            "name": "zcode_speed", "version": "1.2.0"})
         self.save_state()
         self.assert_rejected()
 
@@ -281,7 +285,7 @@ class RuntimeSyncGuardTests(unittest.TestCase):
         self.save_state()
         self.assert_rejected()
         self.write(self.plugin / ".zcode-plugin" / "plugin.json", {
-            "name": "zcode-token-usage-statusbar", "version": self.version})
+            "name": "zcode_speed", "version": self.version})
         self.write(self.storage / "known_marketplaces.json", {"marketplaces": [
             {"id": "zusage-marketplace", "source": dict(self.source, ref="different")}]})
         self.assert_rejected()
@@ -354,8 +358,8 @@ class RuntimeSyncGuardTests(unittest.TestCase):
         sha = hashlib.sha256(b"release zip").hexdigest()
         intent = {"flavor": "github", "version": "1.1.0", "tag": "v1.1.0", "repository": repo,
                   "catalogSha256": sha,
-                  "archive": {"name": "zcode-token-usage-statusbar-v1.1.0.zip", "size": None,
-                              "browser_download_url": base + "zcode-token-usage-statusbar-v1.1.0.zip"},
+                  "archive": {"name": "zcode_speed-v1.1.0.zip", "size": None,
+                              "browser_download_url": base + "zcode_speed-v1.1.0.zip"},
                   "manifest": {"name": "release-manifest.json", "browser_download_url": base + "release-manifest.json"},
                   "url": "https://github.com/" + repo + "/releases/tag/v1.1.0"}
         manifest = json.loads(json.dumps(self.pending["pendingRelease"]["manifest"]))
@@ -394,7 +398,7 @@ class RuntimeSyncGuardTests(unittest.TestCase):
             " module.exports = {"
             " readChannel: (home, root) => {"
             "  const data = JSON.parse(fs.readFileSync(path.join(root, 'known_marketplaces.json'), 'utf8'));"
-            "  return { kind: 'release', repository: 'ByteRax/zcode-token-usage-statusbar',"
+            "  return { kind: 'release', repository: 'ByteRax/zcode_speed',"
             "   marketplace: data.marketplaces.find((m) => m.id === 'zusage-marketplace') };"
             " },"
             " validateRelease: () => null, validateManifest: () => {} };\n", encoding="utf-8")

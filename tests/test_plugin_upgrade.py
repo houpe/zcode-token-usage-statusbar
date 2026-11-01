@@ -19,7 +19,7 @@ from unittest import mock
 
 
 PLUGIN_ROOT = (Path(__file__).resolve().parents[1] / "plugins" /
-               "zcode-token-usage-statusbar")
+               "zcode_speed")
 
 
 def load_module(name, path):
@@ -45,7 +45,7 @@ class PluginUpgradeTests(unittest.TestCase):
         self.write_asar(self.asar)
         manifest = self.plugin / ".zcode-plugin" / "plugin.json"
         manifest.parent.mkdir(parents=True)
-        manifest.write_text('{"name":"zcode-token-usage-statusbar","version":"1.0.0"}', encoding="utf-8")
+        manifest.write_text('{"name":"zcode_speed","version":"1.0.0"}', encoding="utf-8")
         for name in self.installer.RUNTIME_FILES:
             (self.plugin / name).write_bytes((PLUGIN_ROOT / name).read_bytes())
         self.updater = types.SimpleNamespace(start_auto_update=mock.Mock())

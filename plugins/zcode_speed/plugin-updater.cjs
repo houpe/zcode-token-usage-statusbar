@@ -8,7 +8,7 @@ const { isDeepStrictEqual } = require("util");
 const releaseChannel = require("./plugin-release.cjs");
 const { resolvePluginStorage } = require("./plugin-storage.cjs");
 
-const PLUGIN_ID = "zcode-token-usage-statusbar@zusage-marketplace";
+const PLUGIN_ID = "zcode_speed@zusage-marketplace";
 const INTERVAL_MS = 60 * 60 * 1000;
 
 function compareVersions(a, b) {
@@ -175,7 +175,7 @@ function verifyCommittedRelease(record, expected, currentChannel) {
   if (release.catalogSha256 !== undefined && manifest.asset.sha256 !== release.catalogSha256) throw new Error("发布 manifest 与渠道清单的 SHA256 不一致，停止运行时同步");
   if (record.version !== release.version || !record.source || !releaseChannel.sameAssetUrl(record.source.url, release.archive.browser_download_url) ||
       record.source.sha256 !== manifest.asset.sha256 || record.source.source !== "url" || record.source.type !== "zip" ||
-      record.source.path !== "plugins/zcode-token-usage-statusbar" ||
+      record.source.path !== "plugins/zcode_speed" ||
       (record.source.stripRoot !== undefined && record.source.stripRoot !== false) || record.source.headers !== undefined) throw new Error("官方安装结果与选定 Release 不一致，停止运行时同步");
 }
 

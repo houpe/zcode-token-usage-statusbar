@@ -14,7 +14,7 @@ BUNDLE = Path("/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs")
 SANDBOX = Path("/usr/bin/sandbox-exec")
 REPOSITORY = Path(__file__).resolve().parents[1]
 MARKETPLACE = "zusage-marketplace"
-PLUGIN = "zcode-token-usage-statusbar"
+PLUGIN = "zcode_speed"
 PLUGIN_ID = PLUGIN + "@" + MARKETPLACE
 TIMEOUT = 90
 

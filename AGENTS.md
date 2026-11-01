@@ -38,7 +38,7 @@
 |---|---|
 | `zusage.py` | SQLite 查询库、CLI、桌面 JSON 快照、常驻 JSON 行查询与带身份的远端查询 |
 | `usage_mcp.py` | stdio JSON-RPC MCP；调用 `zusage`，提供 `token_usage(scope)` |
-| `plugins/zcode-token-usage-statusbar/token_rate.py` | 插件专有逐问速率、提问身份守卫与会话累计查询 |
+| `plugins/zcode_speed/token_rate.py` | 插件专有逐问速率、提问身份守卫与会话累计查询 |
 | `overlay.js` | 桌面浮层、设置、tooltip、子代理明细、套餐额度 chip、Git 状态 chip 及速率展示 |
 | `turn-stats.js` | 渲染进程统计行 tracker：历史轮记录、运行中子代理身份透传 |
 | `renderer_bridge.py` | 渲染桥：按客户端版本指纹（HOST_TARGETS 登记 + derive 推导）向 SessionPane 节点写 scope 身份属性 |
@@ -51,7 +51,7 @@
 | `quota-client.cjs` | 套餐额度客户端（主进程，冷文件）：解密宿主 OAuth 凭据（`enc:v1` AES-256-GCM 重写实现）直查 BigModel/Z.ai monitor 端点，归一化窗口/退避/冻结/epoch 竞态，凭据只在内存 |
 | `runtime_lock.py` / `release_unpack.py` | 跨进程锁、配置事务/可信同步、安全 ZIP 解包 |
 | `sync_plugin.py` / `release_tool.py` | 根源码副本同步；确定性发布包构建、校验、发布预演/发布 |
-| `plugins/zcode-token-usage-statusbar/` | 两份 manifest、`.mcp.json`、命令、技能、hooks、专有安装/更新/提醒入口与共享副本 |
+| `plugins/zcode_speed/` | 两份 manifest、`.mcp.json`、命令、技能、hooks、专有安装/更新/提醒入口与共享副本 |
 | `web/` | `boot.js`、独立 `overlay.js`、`zusage-sidecar.mjs`、`readonly-guard.py`、nginx/systemd 示例 |
 | `tests/` / `docs/` | 隔离回归、宿主 CLI 沙箱/交互演示；使用、设计、维护及宣传资料 |
 
@@ -79,7 +79,7 @@ python3 sync_plugin.py --check
 ```
 
 - 上述命令只同步**仓库插件副本**，不更新宿主安装缓存或稳定运行目录。
-- 标准运行目录是 `~/.zcode/zcode-token-usage-statusbar/`；插件缓存由宿主管理且可能自定义。`--dev` 可让独立安装直接引用仓库，不能移动该仓库。
+- 标准运行目录是 `~/.zcode/zcode_speed/`；插件缓存由宿主管理且可能自定义。`--dev` 可让独立安装直接引用仓库，不能移动该仓库。
 - 本地市场仍依赖登记的来源目录，不自动 `git pull`；不要一概建议安装后删除 clone。
 - **插件到稳定运行目录的同步**有 hash 基线/mtime 热修保护；根 `install.py` 的运行文件复制是直接覆盖，不能承诺同等保护。首次注入、路径变化、`inject-main.cjs`、`quota-client.cjs` 或 updater/release/storage 主进程文件变更需完全退出并重启；可热更新文件也须确认实际加载路径。
 
@@ -236,7 +236,7 @@ node --check web/zusage-sidecar.mjs
 - 更新渠道由 `readChannel` 按注册来源**和市场缓存清单**共同判定：清单为 zip 源的 GitHub/GitCode 来源是 Release 渠道（ZIP、manifest、版本一致，安装后由 `verifyCommittedRelease` 复核宿主安装记录）；清单为源码路径的仓库来源判为 `market` 渠道，与本地目录来源同链，由宿主插件管理器按清单直接更新。原「市场清单必须与 Release 一致」的安装前校验门（`validateCatalog`）已按维护者决定移除，不要重新加回。不静默切换用户市场来源，不启用被禁用插件；渠道判定陷阱见 [.zcode/rules/install-release.md](.zcode/rules/install-release.md)。
 - `--publish`/`--confirm` 是工具安全门，不是用户授权的替代。提交、推送、tag、创建 Release、渠道写入均按**当前明确授权**执行，本指南不授予持续发布权限。
 - 实际目标仓库先检查 `git remote -v`，不要混用 fork/上游；源码/渠道 branch、tag、Release 必须分别确认。
-- `fork` 配置双 push URL：`git push fork` 同时推送 GitHub（ByteRax）与 GitCode 镜像（gitcode.com/tanranran/zcode-token-usage-statusbar）；`gitcode` 远程仅用于单独核对或恢复，`origin` 仍只读。GitCode 承载国内更新渠道：`plugin-releases-gitcode` 分支清单 + 同 tag Release 资产，由 `release_tool.py publish --gitcode-repo`（需 `GITCODE_TOKEN`）在 GitHub 发布验收后生成，见[双远程同步](docs/maintaining.md#双远程同步)。更新器的双渠道校验必须一起改并有测试锁定；GitCode 段推送认证未配置时该段失败属预期，不代表 GitHub 段失败。
+- `fork` 配置双 push URL：`git push fork` 同时推送 GitHub（ByteRax）与 GitCode 镜像（gitcode.com/tanranran/zcode_speed）；`gitcode` 远程仅用于单独核对或恢复，`origin` 仍只读。GitCode 承载国内更新渠道：`plugin-releases-gitcode` 分支清单 + 同 tag Release 资产，由 `release_tool.py publish --gitcode-repo`（需 `GITCODE_TOKEN`）在 GitHub 发布验收后生成，见[双远程同步](docs/maintaining.md#双远程同步)。更新器的双渠道校验必须一起改并有测试锁定；GitCode 段推送认证未配置时该段失败属预期，不代表 GitHub 段失败。
 - 维护文档旧 CRLF 修复步骤含破坏性重新检出命令，**不要执行**；保存已有修改，用独立工作树/新检出验证字节。也不要把安装 `--dry-run` 概括为完全无本地副作用。
 
 ## 9. 完成标准

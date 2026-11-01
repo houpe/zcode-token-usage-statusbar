@@ -9,7 +9,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'overlay.js'), 'utf8');
-const pluginSource = fs.readFileSync(path.join(__dirname, '..', 'plugins', 'zcode-token-usage-statusbar', 'overlay.js'), 'utf8');
+const pluginSource = fs.readFileSync(path.join(__dirname, '..', 'plugins', 'zcode_speed', 'overlay.js'), 'utf8');
 function extract(start, end) {
   const a = source.indexOf(start), b = source.indexOf(end, a);
   assert.ok(a >= 0 && b > a, `提取失败: ${start}`);

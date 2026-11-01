@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把仓库根的运行时文件同步进 plugins/zcode-token-usage-statusbar/（插件打包副本）。
+"""把仓库根的运行时文件同步进 plugins/zcode_speed/（插件打包副本）。
 
 插件要能脱离仓库独立安装（marketplace 缓存目录里只有 plugins/<name>/ 子树），
 所以插件包里必须带一份 zusage.py 等文件的副本。改了根目录文件后跑一次：
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
-PLUGIN = ROOT / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = ROOT / "plugins" / "zcode_speed"
 
 # 插件包需要的根文件：除 usage_mcp.py 外也会同步进运行时目录
 FILES = [

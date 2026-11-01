@@ -35,7 +35,7 @@ Token 速度状态栏，装上之后输入框下面会多一条小状态条，
 
 安装也简单，三步：
 ① ZCode 设置 → 插件 → 添加插件市场，填
-   github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
+   github.com/ByteRax/zcode_speed#plugin-releases
 ② 任意对话框输入 /install-overlay
 ③ 重启 ZCode，状态条就出现了
 
@@ -47,7 +47,7 @@ Token 速度状态栏，装上之后输入框下面会多一条小状态条，
 ```
 发现一个好用的 ZCode 插件：装上之后输入框下面会显示模型生成速度、
 token 用量和上下文占比，一眼就能看明白，完全免费开源、数据不上传。
-github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
+github.com/ByteRax/zcode_speed#plugin-releases
 ```
 
 朋友圈更短版本：
@@ -55,7 +55,7 @@ github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
 ```
 ZCode 这个状态栏插件真香⚡模型快不快、token 用了多少、上下文还剩
 多少，一条小状态条全搞定。免费开源→
-github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
+github.com/ByteRax/zcode_speed#plugin-releases
 ```
 
 ## 备注

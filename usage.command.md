@@ -1,7 +1,7 @@
 ---
 description: 显示 ZCode token 用量（当前会话/今日/近几天/按会话/按工作区/指定会话明细）
 ---
-调用 MCP 工具 `mcp__zcode-token-usage-statusbar__token_usage`（server 名 zcode-token-usage-statusbar）查询 token 用量，把返回的报表原样整理后回复；用户要详细表格时用完整数值（带千分位），不要自行缩写。
+调用 MCP 工具 `mcp__zcode_speed__token_usage`（server 名 zcode_speed）查询 token 用量，把返回的报表原样整理后回复；用户要详细表格时用完整数值（带千分位），不要自行缩写。
 
 参数规则（$ARGUMENTS）：
 - 为空或 "now" → scope=current

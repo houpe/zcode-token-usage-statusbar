@@ -6,7 +6,7 @@ const os = require("os");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
 
-const PLUGIN_ID = "zcode-token-usage-statusbar@zusage-marketplace";
+const PLUGIN_ID = "zcode_speed@zusage-marketplace";
 const STABLE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const MAX_ASSET = 16 * 1024 * 1024;
 const MAX_JSON = 256 * 1024;
@@ -97,7 +97,7 @@ async function fetchBytes(url, limit, onProgress) {
         const allowed = parsed.protocol === "https:" && !parsed.username && !parsed.password && !parsed.port &&
           DOWNLOAD_HOSTS.includes(parsed.hostname);
         if (!allowed) throw new Error("拒绝非 GitHub/GitCode HTTPS 更新地址");
-        const request = https.get(parsed, { headers: { "User-Agent": "zcode-token-usage-statusbar-release-updater",
+        const request = https.get(parsed, { headers: { "User-Agent": "zcode_speed-release-updater",
           "Accept": parsed.hostname === "api.github.com" ? "application/vnd.github+json" : "application/octet-stream",
           "X-GitHub-Api-Version": "2022-11-28" } }, (response) => {
           if (settled) { response.destroy(); return; }
@@ -145,7 +145,7 @@ function validateRelease(release, repository) {
   if (!release || release.draft !== false || release.prerelease !== false || typeof release.tag_name !== "string") return null;
   const version = release.tag_name.startsWith("v") ? release.tag_name.slice(1) : "";
   if (!STABLE.test(version)) return null;
-  const names = [`zcode-token-usage-statusbar-v${version}.zip`, "release-manifest.json"];
+  const names = [`zcode_speed-v${version}.zip`, "release-manifest.json"];
   const assets = Array.isArray(release.assets) ? release.assets : [];
   const picked = names.map((name) => assets.filter((a) => a && a.name === name));
   if (picked.some((matches) => matches.length !== 1)) return null;
@@ -182,17 +182,17 @@ function githubReleaseFromCatalog(catalog, repository) {
   // 与 API 行同构的候选；清单 sha256 随 catalogSha256 保留，供下载 manifest 交叉比对。
   if (!githubRepository(repository) || repository !== githubRepository(repository)) throw new Error("GitHub 仓库标识无效");
   const entries = catalog && catalog.plugins;
-  const matches = Array.isArray(entries) ? entries.filter((p) => p && p.name === "zcode-token-usage-statusbar") : [];
+  const matches = Array.isArray(entries) ? entries.filter((p) => p && p.name === "zcode_speed") : [];
   const entry = matches.length === 1 ? matches[0] : null;
   const source = entry && entry.source;
   if (!catalog || catalog.name !== "zusage-marketplace" || !entry || typeof entry.version !== "string" ||
       !STABLE.test(entry.version) || !source || typeof source !== "object" || source.source !== "url" ||
       source.type !== "zip" || typeof source.url !== "string" || source.headers !== undefined ||
       (source.stripRoot !== undefined && source.stripRoot !== false) ||
-      source.path !== "plugins/zcode-token-usage-statusbar" ||
+      source.path !== "plugins/zcode_speed" ||
       typeof source.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(source.sha256)) throw new Error("GitHub 渠道清单格式无效");
   const tag = "v" + entry.version;
-  const archiveName = `zcode-token-usage-statusbar-v${entry.version}.zip`;
+  const archiveName = `zcode_speed-v${entry.version}.zip`;
   const expectedPath = `/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(archiveName)}`;
   const parsed = parseAssetUrl(source.url);
   if (!parsed || parsed.host !== "github" || !sameRepository(parsed.repository, repository) ||
@@ -210,7 +210,7 @@ function validateGithubCatalogRelease(release) {
       release.repository !== githubRepository(release.repository) || typeof release.version !== "string" ||
       !STABLE.test(release.version) || release.tag !== "v" + release.version ||
       typeof release.catalogSha256 !== "string" || !/^[a-f0-9]{64}$/.test(release.catalogSha256) || !release.archive ||
-      release.archive.name !== `zcode-token-usage-statusbar-v${release.version}.zip` ||
+      release.archive.name !== `zcode_speed-v${release.version}.zip` ||
       release.archive.size !== null) return null;
   const archive = parseAssetUrl(release.archive.browser_download_url);
   const manifest = parseAssetUrl(release.manifest && release.manifest.browser_download_url);
@@ -274,7 +274,7 @@ async function downloadRelease(release, python, fetch = fetchBytes, runUnpack = 
     const canonical = (value) => { try { return fs.realpathSync.native(value); } catch (e) { return value; } };
     if (!result || result.ok !== true || result.version !== release.version ||
         canonical(result.marketplaceRoot) !== canonical(output) ||
-        canonical(result.pluginRoot) !== canonical(path.join(output, "plugins", "zcode-token-usage-statusbar"))) throw new Error("发布包校验或解压结果无效");
+        canonical(result.pluginRoot) !== canonical(path.join(output, "plugins", "zcode_speed"))) throw new Error("发布包校验或解压结果无效");
     return { directory, marketplaceRoot: output, pluginRoot: result.pluginRoot, release, manifest, cleanup };
   } catch (error) { cleanup(); throw error; }
 }
@@ -283,17 +283,17 @@ function gitcodeReleaseFromCatalog(catalog, repository) {
   // 下载 URL 与安装后复核（verifyCommittedRelease）共用同一套主机模式，形状以 2026-10-20 实测为准。
   if (!githubRepository(repository) || repository !== githubRepository(repository)) throw new Error("GitCode 仓库标识无效");
   const entries = catalog && catalog.plugins;
-  const matches = Array.isArray(entries) ? entries.filter((p) => p && p.name === "zcode-token-usage-statusbar") : [];
+  const matches = Array.isArray(entries) ? entries.filter((p) => p && p.name === "zcode_speed") : [];
   const entry = matches.length === 1 ? matches[0] : null;
   const source = entry && entry.source;
   if (!catalog || catalog.name !== "zusage-marketplace" || !entry || typeof entry.version !== "string" ||
       !STABLE.test(entry.version) || !source || typeof source !== "object" || source.source !== "url" ||
       source.type !== "zip" || typeof source.url !== "string" || source.headers !== undefined ||
       (source.stripRoot !== undefined && source.stripRoot !== false) ||
-      source.path !== "plugins/zcode-token-usage-statusbar" ||
+      source.path !== "plugins/zcode_speed" ||
       typeof source.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(source.sha256)) throw new Error("GitCode 渠道清单格式无效");
   const tag = "v" + entry.version;
-  const archiveName = `zcode-token-usage-statusbar-v${entry.version}.zip`;
+  const archiveName = `zcode_speed-v${entry.version}.zip`;
   const expectedPath = `/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(archiveName)}`;
   const parsed = parseAssetUrl(source.url);
   if (!parsed || parsed.host !== "gitcode" || !sameRepository(parsed.repository, repository) ||
@@ -310,7 +310,7 @@ function validateGitcodeRelease(release) {
   if (!release || release.flavor !== "gitcode" || !githubRepository(release.repository) ||
       release.repository !== githubRepository(release.repository) || typeof release.version !== "string" ||
       !STABLE.test(release.version) || release.tag !== "v" + release.version || !release.archive ||
-      release.archive.name !== `zcode-token-usage-statusbar-v${release.version}.zip` ||
+      release.archive.name !== `zcode_speed-v${release.version}.zip` ||
       release.archive.size !== null) return null;
   const archive = parseAssetUrl(release.archive.browser_download_url);
   const manifest = parseAssetUrl(release.manifest && release.manifest.browser_download_url);
@@ -327,13 +327,13 @@ function validateGitcodeRelease(release) {
 }
 /* 已注册市场的清单指向什么：Release 下载源，还是仓库源码（本地路径/开发分支）。
    readChannel 据此把源码清单的仓库来源判为 market 渠道，交给宿主插件管理器直接更新。 */
-function catalogChannel(catalog, pluginName = "zcode-token-usage-statusbar") {
+function catalogChannel(catalog, pluginName = "zcode_speed") {
   const entries = catalog && catalog.plugins;
   const matches = Array.isArray(entries) ? entries.filter((p) => p && p.name === pluginName) : [];
   const entry = matches.length === 1 ? matches[0] : null;
   if (!entry) return "unknown";
   const source = entry.source;
-  /* 源码清单里 source 常是相对路径字符串（如 "./plugins/zcode-token-usage-statusbar"） */
+  /* 源码清单里 source 常是相对路径字符串（如 "./plugins/zcode_speed"） */
   if (typeof source === "string") return "source";
   if (!source || typeof source !== "object") return "unknown";
   return source.source === "url" && source.type === "zip" ? "release" : "source";

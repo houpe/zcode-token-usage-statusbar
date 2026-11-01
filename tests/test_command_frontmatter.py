@@ -11,7 +11,7 @@ import re
 import unittest
 from pathlib import Path
 
-PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode-token-usage-statusbar"
+PLUGIN = Path(__file__).resolve().parents[1] / "plugins" / "zcode_speed"
 COMMANDS = PLUGIN / "commands"
 ALLOWED_KEYS = {"description", "argument-hint"}
 NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_:-]{0,63}$")

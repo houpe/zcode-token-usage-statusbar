@@ -15,7 +15,7 @@ from unittest import mock
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "release-fixture/zcode-token-usage-statusbar"
+REPOSITORY = "release-fixture/zcode_speed"
 HEAD = "0123456789abcdef0123456789abcdef01234567"
 
 
@@ -325,7 +325,7 @@ class ReleaseIntegrationTests(unittest.TestCase):
         def dirty_run(root, *args):
             if args[:2] == ("git", "status"):
                 self.calls.append(args)
-                return b"?? plugins/zcode-token-usage-statusbar/local-state.json\n"
+                return b"?? plugins/zcode_speed/local-state.json\n"
             return self.stub_run(root, *args)
 
         with mock.patch.object(self.tool, "run", side_effect=dirty_run):

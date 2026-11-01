@@ -10,7 +10,7 @@ const { promisify } = require("util");
 const { createUpdater, PLUGIN_ID, INTERVAL_MS, verifyRuntimeSync } = require("../plugin-updater.cjs");
 const { validateRelease, validateManifest, downloadRelease, gitcodeReleaseFromCatalog } = require("../plugin-release.cjs");
 
-const PLUGIN = "zcode-token-usage-statusbar";
+const PLUGIN = "zcode_speed";
 const MARKET = "zusage-marketplace";
 const REPOSITORY = "ByteRax/" + PLUGIN;
 const GITCODE_REPOSITORY = "tanranran/" + PLUGIN;

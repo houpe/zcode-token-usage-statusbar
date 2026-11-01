@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ZCode token 用量 MCP server（stdio, 零依赖；注册名 zcode-token-usage-statusbar）。
+"""ZCode token 用量 MCP server（stdio, 零依赖；注册名 zcode_speed）。
 
 提供工具 token_usage(scope)：current(默认)/today/days:N/sessions[:N]/models[:days]/session:<id前缀>/workspace:<目录关键词>。
 协议仅实现 initialize / tools/list / tools/call；调试信息只走 stderr。
@@ -34,7 +34,7 @@ def revive_finalize_monitor():
     try:
         cfg_path = Path(__file__).parent / "config.json"
         if not cfg_path.is_file():
-            cfg_path = Path.home() / ".zcode" / "zcode-token-usage-statusbar" / "config.json"
+            cfg_path = Path.home() / ".zcode" / "zcode_speed" / "config.json"
         asar = json.loads(cfg_path.read_text(encoding="utf-8")).get("asar_path")
         if not isinstance(asar, str) or not asar:
             return   # 无安装目标记录（未完成过安装）：无事可做

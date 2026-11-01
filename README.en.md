@@ -4,7 +4,7 @@
 
 **Adds a small status bar to the bottom of your ZCode chat window: how fast the model is going, how many tokens you've spent, how much context is left — all at a glance.**
 
-A third-party plugin for the [ZCode](https://zcode.z.ai) desktop app (not an official ZCode feature) — listed in the marketplace as **ZCode Token Usage Statusbar**. It also ships a command-line tool and an MCP tool for digging through usage history — if you don't know what MCP is, you can safely ignore that part.
+A third-party plugin for the [ZCode](https://zcode.z.ai) desktop app (not an official ZCode feature) — listed in the marketplace as **zcode_speed**. It also ships a command-line tool and an MCP tool for digging through usage history — if you don't know what MCP is, you can safely ignore that part.
 
 A ZCode plugin that keeps generation speed (tok/s), time to first token (TTFT), token usage and context window utilization visible in your conversation. Includes usage reports, subagent details and MCP queries.
 
@@ -21,7 +21,7 @@ Promotional image with staged UI and demonstration data; the actual interface va
 **Install it in three steps:** send this to ZCode:
 
 ```text
-Install or update the ZCode plugin https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases, then run /install-overlay when it's done
+Install or update the ZCode plugin https://github.com/ByteRax/zcode_speed#plugin-releases, then run /install-overlay when it's done
 ```
 
 Confirm the plugin is installed and enabled, then make sure `/install-overlay` succeeds — if it doesn't run for you, type it in the chat yourself. **Installing the bar modifies ZCode's `app.asar` program file**, so proceed only if you trust the project. Finally, **quit ZCode completely and reopen it** (closing the window doesn't count), then check for the bar at the bottom. The `#plugin-releases` at the end selects the officially released stable channel; don't drop it from the URL.
@@ -29,12 +29,12 @@ Confirm the plugin is installed and enabled, then make sure `/install-overlay` s
 Can't reach GitHub from your network (mainland China)? Send ZCode this instead (the trailing `.git` is required; this route needs local [Git](https://git-scm.com/downloads)):
 
 ```text
-Install or update the ZCode plugin https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode, then run /install-overlay when it's done
+Install or update the ZCode plugin https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode, then run /install-overlay when it's done
 ```
 
 [Quick start](#quick-start) · [FAQ](#faq) · [Feature illustrations](docs/features.md)
 
-> This page describes the `main` branch, which can include unreleased changes. The [GitHub Release](https://github.com/ByteRax/zcode-token-usage-statusbar/releases) for your installed version is authoritative for the stable channel. Features marked development-only are unavailable or behave differently in v1.5.7.
+> This page describes the `main` branch, which can include unreleased changes. The [GitHub Release](https://github.com/ByteRax/zcode_speed/releases) for your installed version is authoritative for the stable channel. Features marked development-only are unavailable or behave differently in v1.5.7.
 
 ---
 
@@ -115,13 +115,13 @@ Context usage doesn't take a slot on the bar — look at the **context button** 
 The recommended route is the **plugin**: in ZCode, open **Settings → Plugins → Add marketplace** and paste the market URL:
 
 ```text
-https://github.com/ByteRax/zcode-token-usage-statusbar#plugin-releases
+https://github.com/ByteRax/zcode_speed#plugin-releases
 ```
 
-Then install **ZCode Token Usage Statusbar** from that market and keep it enabled. On machines where direct GitHub access times out, swap the URL for the GitCode channel (the trailing `.git` is required):
+Then install **zcode_speed** from that market and keep it enabled. On machines where direct GitHub access times out, swap the URL for the GitCode channel (the trailing `.git` is required):
 
 ```text
-https://gitcode.com/tanranran/zcode-token-usage-statusbar.git#plugin-releases-gitcode
+https://gitcode.com/tanranran/zcode_speed.git#plugin-releases-gitcode
 ```
 
 You can also send the natural-language "three steps" line from the top of this README to the AI and let it add the market and install the plugin for you (it uses terminal commands; the result is identical). Other routes: to hack on the code, point **Settings → Plugins → Add marketplace → Choose directory** at the repository root; to skip the plugin entirely, `git clone` and run `python install.py`; self-hosted ZCode servers have a separately deployed [Web edition](web/README.md), which cannot be installed on the officially hosted website. Pick **one** route and stick with it — see the [installation guide](docs/user-guide.md#插件安装) (Chinese) for step-by-step details.
@@ -173,7 +173,7 @@ Cash bills, no — there's no billing data here. Plan quota and balance, yes —
 
 **Installer route**: run `python install.py --remove` in the repository directory, then fully quit and reopen ZCode.
 
-**Plugin route**: ① turn off auto-update in ⚙ → ② run `/uninstall-overlay` and confirm it succeeded → ③ **Settings → Plugins → Installed → ZCode Token Usage Statusbar → ⋯ → Uninstall** → ④ fully quit and reopen ZCode and confirm the bar is gone. Don't just delete the plugin and leave the bar behind. To clear settings, caches and the marketplace too, see the [full cleanup guide](docs/user-guide.md#彻底卸载) (Chinese).
+**Plugin route**: ① turn off auto-update in ⚙ → ② run `/uninstall-overlay` and confirm it succeeded → ③ **Settings → Plugins → Installed → zcode_speed → ⋯ → Uninstall** → ④ fully quit and reopen ZCode and confirm the bar is gone. Don't just delete the plugin and leave the bar behind. To clear settings, caches and the marketplace too, see the [full cleanup guide](docs/user-guide.md#彻底卸载) (Chinese).
 
 ## More documentation
 
@@ -187,4 +187,4 @@ Detailed desktop guides are currently in Chinese.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=ByteRax/zcode-token-usage-statusbar&type=Date)](https://www.star-history.com/#ByteRax/zcode-token-usage-statusbar&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ByteRax/zcode_speed&type=Date)](https://www.star-history.com/#ByteRax/zcode_speed&Date)

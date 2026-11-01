@@ -12,11 +12,11 @@ const { githubRepository, gitcodeRepository, readChannel, checkRelease, gitcodeR
   fetchBytes, sameAssetUrl, MAX_ASSET, MAX_JSON, PLUGIN_ID } = require("../plugin-release.cjs");
 const { compareVersions } = require("../plugin-updater.cjs");
 
-function release(version, repository = "ByteRax/zcode-token-usage-statusbar") {
+function release(version, repository = "ByteRax/zcode_speed") {
   const base = `https://github.com/${repository}/releases/download/v${version}/`;
   return { tag_name: "v" + version, draft: false, prerelease: false,
-    assets: [{ name: `zcode-token-usage-statusbar-v${version}.zip`, state: "uploaded", size: 3,
-      browser_download_url: base + `zcode-token-usage-statusbar-v${version}.zip` },
+    assets: [{ name: `zcode_speed-v${version}.zip`, state: "uploaded", size: 3,
+      browser_download_url: base + `zcode_speed-v${version}.zip` },
     { name: "release-manifest.json", state: "uploaded", size: 512, browser_download_url: base + "release-manifest.json" }] };
 }
 function fixture(t, source) {
@@ -28,7 +28,7 @@ function fixture(t, source) {
 }
 function channel(home) { return readChannel(home, path.join(home, ".zcode", "cli", "plugins")); }
 function packageFixture() {
-  const selected = validateRelease(release("1.4.0"), "ByteRax/zcode-token-usage-statusbar"), bytes = Buffer.from("zip");
+  const selected = validateRelease(release("1.4.0"), "ByteRax/zcode_speed"), bytes = Buffer.from("zip");
   const manifest = { schemaVersion: 1, repository: selected.repository, version: selected.version, tag: selected.tag,
     pluginId: PLUGIN_ID, asset: { name: selected.archive.name, size: bytes.length,
       sha256: crypto.createHash("sha256").update(bytes).digest("hex") } };
@@ -40,7 +40,7 @@ function mockHttps(t, routes) {
   t.mock.method(https, "get", (url, options, callback) => {
     const route = routes[calls.length]; calls.push(url.href);
     assert.ok(route, `unexpected request: ${url.href}`);
-    assert.equal(options.headers["User-Agent"], "zcode-token-usage-statusbar-release-updater");
+    assert.equal(options.headers["User-Agent"], "zcode_speed-release-updater");
     const request = new EventEmitter(); let socketTimeout;
     request.setTimeout = (ms, handler) => { assert.equal(ms, 30000); socketTimeout = handler; return request; };
     request.destroy = (error) => { queueMicrotask(() => request.emit("error", error)); return request; };
@@ -64,9 +64,9 @@ function mockHttps(t, routes) {
   return calls;
 }
 test("R6 repository case is compatible but hosts tags and asset paths remain exact", () => {
-  const selected = validateRelease(release("1.4.0"), "byterax/zcode-token-usage-statusbar");
+  const selected = validateRelease(release("1.4.0"), "byterax/zcode_speed");
   const f = packageFixture();
-  validateManifest({ ...f.manifest, repository: "BYTERAX/ZCODE-TOKEN-USAGE-STATUSBAR" }, selected);
+  validateManifest({ ...f.manifest, repository: "BYTERAX/ZCODE_SPEED" }, selected);
   for (const url of [selected.archive.browser_download_url.replace("github.com", "GITHUB.COM"),
     selected.archive.browser_download_url.replace("v1.4.0", "V1.4.0"), selected.archive.browser_download_url + "?x=1"]) {
     const row = release("1.4.0"); row.assets[0].browser_download_url = url;
@@ -102,8 +102,8 @@ test("R13 redirected download shares one deadline and cancels current request", 
 
 test("registered directory stays local and GitHub/git repository selects release without rebinding", (t) => {
   assert.equal(channel(fixture(t, { source: "directory", path: "/dev" })).kind, "local");
-  assert.equal(channel(fixture(t, { source: "github", repo: "ByteRax/zcode-token-usage-statusbar", ref: "plugin-releases" })).repository, "ByteRax/zcode-token-usage-statusbar");
-  assert.equal(channel(fixture(t, { source: "git", url: "https://github.com/ByteRax/zcode-token-usage-statusbar.git" })).kind, "release");
+  assert.equal(channel(fixture(t, { source: "github", repo: "ByteRax/zcode_speed", ref: "plugin-releases" })).repository, "ByteRax/zcode_speed");
+  assert.equal(channel(fixture(t, { source: "git", url: "https://github.com/ByteRax/zcode_speed.git" })).kind, "release");
   assert.throws(() => channel(fixture(t, { source: "git", url: "https://gitlab.com/owner/repo.git" })), /GitHub/);
 });
 test("repository validation does not accept credentials, query, non-GitHub URLs or branch suffix", () => {
@@ -111,29 +111,29 @@ test("repository validation does not accept credentials, query, non-GitHub URLs 
   for (const value of ["https://evil.com/owner/repo", "https://token@github.com/owner/repo", "owner/repo#main", "owner/repo?x=1", "../repo"]) assert.equal(githubRepository(value), null);
 });
 test("registered GitCode git source selects the gitcode release flavor; other hosts stay rejected", (t) => {
-  const selected = channel(fixture(t, { source: "git", url: "https://gitcode.com/tanranran/zcode-token-usage-statusbar.git", ref: "plugin-releases-gitcode" }));
+  const selected = channel(fixture(t, { source: "git", url: "https://gitcode.com/tanranran/zcode_speed.git", ref: "plugin-releases-gitcode" }));
   assert.deepEqual({ kind: selected.kind, flavor: selected.flavor, repository: selected.repository },
-    { kind: "release", flavor: "gitcode", repository: "tanranran/zcode-token-usage-statusbar" });
-  const github = channel(fixture(t, { source: "git", url: "https://github.com/ByteRax/zcode-token-usage-statusbar.git" }));
+    { kind: "release", flavor: "gitcode", repository: "tanranran/zcode_speed" });
+  const github = channel(fixture(t, { source: "git", url: "https://github.com/ByteRax/zcode_speed.git" }));
   assert.equal(github.flavor, "github");
   assert.throws(() => channel(fixture(t, { source: "git", url: "https://gitlab.com/owner/repo.git" })), /GitHub\/GitCode/);
   assert.equal(gitcodeRepository("git@gitcode.com:tanranran/project.git"), "tanranran/project");
   for (const value of ["https://evil.com/owner/repo", "https://gitcode.com.evil.com/owner/repo", "owner/repo#main"]) assert.equal(gitcodeRepository(value), null);
 });
 test("asset URLs only match within the same release host", () => {
-  const githubUrl = "https://github.com/ByteRax/zcode-token-usage-statusbar/releases/download/v1.5.2/a.zip";
-  const gitcodeUrl = "https://gitcode.com/tanranran/zcode-token-usage-statusbar/releases/download/v1.5.2/a.zip";
+  const githubUrl = "https://github.com/ByteRax/zcode_speed/releases/download/v1.5.2/a.zip";
+  const gitcodeUrl = "https://gitcode.com/tanranran/zcode_speed/releases/download/v1.5.2/a.zip";
   assert.equal(sameAssetUrl(githubUrl, githubUrl), true);
   assert.equal(sameAssetUrl(gitcodeUrl, gitcodeUrl), true);
   assert.equal(sameAssetUrl(githubUrl, gitcodeUrl), false);
   assert.equal(sameAssetUrl(gitcodeUrl.replace("gitcode.com", "file-cdn.gitcode.com"), gitcodeUrl), false);
 });
 test("gitcode release synthesized from the channel catalog pins repo, tag and asset names", (t) => {
-  const repo = "tanranran/zcode-token-usage-statusbar";
+  const repo = "tanranran/zcode_speed";
   const sha256 = "a".repeat(64);
-  const catalog = { name: "zusage-marketplace", plugins: [{ name: "zcode-token-usage-statusbar", version: "1.5.2",
-    source: { source: "url", type: "zip", url: `https://gitcode.com/${repo}/releases/download/v1.5.2/zcode-token-usage-statusbar-v1.5.2.zip`,
-      sha256, path: "plugins/zcode-token-usage-statusbar", stripRoot: false } }] };
+  const catalog = { name: "zusage-marketplace", plugins: [{ name: "zcode_speed", version: "1.5.2",
+    source: { source: "url", type: "zip", url: `https://gitcode.com/${repo}/releases/download/v1.5.2/zcode_speed-v1.5.2.zip`,
+      sha256, path: "plugins/zcode_speed", stripRoot: false } }] };
   const selected = gitcodeReleaseFromCatalog(catalog, repo);
   assert.equal(selected.flavor, "gitcode");
   assert.equal(selected.version, "1.5.2");
@@ -142,8 +142,8 @@ test("gitcode release synthesized from the channel catalog pins repo, tag and as
   assert.equal(selected.archive.browser_download_url, catalog.plugins[0].source.url);
   assert.equal(selected.manifest.browser_download_url, `https://gitcode.com/${repo}/releases/download/v1.5.2/release-manifest.json`);
   assert.equal(selected.url, `https://gitcode.com/${repo}/releases/tag/v1.5.2`);
-  const upstreamManifest = { schemaVersion: 1, repository: "ByteRax/zcode-token-usage-statusbar", version: "1.5.2",
-    tag: "v1.5.2", pluginId: PLUGIN_ID, asset: { name: "zcode-token-usage-statusbar-v1.5.2.zip", size: 603706, sha256 } };
+  const upstreamManifest = { schemaVersion: 1, repository: "ByteRax/zcode_speed", version: "1.5.2",
+    tag: "v1.5.2", pluginId: PLUGIN_ID, asset: { name: "zcode_speed-v1.5.2.zip", size: 603706, sha256 } };
   validateManifest(upstreamManifest, selected);
   validateGitcodeRelease(selected);
   assert.equal(validateGitcodeRelease({ ...selected, archive: { ...selected.archive, size: 3 } }), null);
@@ -161,14 +161,14 @@ test("gitcode release synthesized from the channel catalog pins repo, tag and as
     mutate(broken.plugins[0]);
     assert.throws(() => gitcodeReleaseFromCatalog(broken, repo), /GitCode 渠道清单/);
   }
-  assert.throws(() => gitcodeReleaseFromCatalog(catalog, "ByteRax/zcode-token-usage-statusbar"), /不一致/);
+  assert.throws(() => gitcodeReleaseFromCatalog(catalog, "ByteRax/zcode_speed"), /不一致/);
 });
 test("github release synthesized from the channel catalog pins repo, tag and asset names", () => {
-  const repo = "ByteRax/zcode-token-usage-statusbar";
+  const repo = "ByteRax/zcode_speed";
   const sha256 = "b".repeat(64);
-  const catalog = { name: "zusage-marketplace", plugins: [{ name: "zcode-token-usage-statusbar", version: "1.5.6",
-    source: { source: "url", type: "zip", url: `https://github.com/${repo}/releases/download/v1.5.6/zcode-token-usage-statusbar-v1.5.6.zip`,
-      sha256, path: "plugins/zcode-token-usage-statusbar", stripRoot: false } }] };
+  const catalog = { name: "zusage-marketplace", plugins: [{ name: "zcode_speed", version: "1.5.6",
+    source: { source: "url", type: "zip", url: `https://github.com/${repo}/releases/download/v1.5.6/zcode_speed-v1.5.6.zip`,
+      sha256, path: "plugins/zcode_speed", stripRoot: false } }] };
   const selected = githubReleaseFromCatalog(catalog, repo);
   assert.equal(selected.flavor, "github");
   assert.equal(selected.version, "1.5.6");
@@ -179,7 +179,7 @@ test("github release synthesized from the channel catalog pins repo, tag and ass
   assert.equal(selected.manifest.browser_download_url, `https://github.com/${repo}/releases/download/v1.5.6/release-manifest.json`);
   assert.equal(selected.url, `https://github.com/${repo}/releases/tag/v1.5.6`);
   const manifest = { schemaVersion: 1, repository: repo, version: "1.5.6",
-    tag: "v1.5.6", pluginId: PLUGIN_ID, asset: { name: "zcode-token-usage-statusbar-v1.5.6.zip", size: 603706, sha256 } };
+    tag: "v1.5.6", pluginId: PLUGIN_ID, asset: { name: "zcode_speed-v1.5.6.zip", size: 603706, sha256 } };
   validateManifest(manifest, selected);
   assert.equal(validateGithubCatalogRelease(selected).version, "1.5.6");
   assert.equal(validateGithubCatalogRelease({ ...selected, archive: { ...selected.archive, size: 3 } }), null);
@@ -199,33 +199,33 @@ test("github release synthesized from the channel catalog pins repo, tag and ass
     mutate(broken.plugins[0]);
     assert.throws(() => githubReleaseFromCatalog(broken, repo), /GitHub 渠道清单/);
   }
-  assert.throws(() => githubReleaseFromCatalog(catalog, "tanranran/zcode-token-usage-statusbar"), /不一致/);
+  assert.throws(() => githubReleaseFromCatalog(catalog, "tanranran/zcode_speed"), /不一致/);
 });
 test("formal release selection ignores screenshots, drafts and prereleases and compares numeric versions", async () => {
   const rows = [release("1.9.0"), { ...release("2.0.0"), draft: true }, { ...release("3.0.0"), prerelease: true },
     { ...release("4.0.0"), tag_name: "screenshots-v65-hover-bubble" }, release("1.10.0")];
-  const selected = await checkRelease("ByteRax/zcode-token-usage-statusbar", compareVersions, async () => Buffer.from(JSON.stringify(rows)));
+  const selected = await checkRelease("ByteRax/zcode_speed", compareVersions, async () => Buffer.from(JSON.stringify(rows)));
   assert.equal(selected.version, "1.10.0");
 });
 test("no proper assets or corrupted release metadata never falls back to a development branch", async () => {
-  const repo = "ByteRax/zcode-token-usage-statusbar";
+  const repo = "ByteRax/zcode_speed";
   await assert.rejects(checkRelease(repo, compareVersions, async () => Buffer.from("[]")), /正式 Release/);
   const bad = release("1.0.0"); bad.assets[0].browser_download_url = "https://evil.com/payload.zip";
   await assert.rejects(checkRelease(repo, compareVersions, async () => Buffer.from(JSON.stringify([bad]))), /来源/);
   await assert.rejects(fetchBytes("http://github.com/a/b", 100), /HTTPS/);
 });
 test("download verifies source manifest, asset hash and unpack result and cleans its temp only", async () => {
-  const repo = "ByteRax/zcode-token-usage-statusbar";
+  const repo = "ByteRax/zcode_speed";
   const selected = await checkRelease(repo, compareVersions, async () => Buffer.from(JSON.stringify([release("1.4.0")])));
   const bytes = Buffer.from("zip");
   const manifest = { schemaVersion: 1, repository: repo, version: "1.4.0", tag: "v1.4.0",
-    pluginId: "zcode-token-usage-statusbar@zusage-marketplace", asset: { name: selected.archive.name, size: bytes.length,
+    pluginId: "zcode_speed@zusage-marketplace", asset: { name: selected.archive.name, size: bytes.length,
       sha256: crypto.createHash("sha256").update(bytes).digest("hex") } };
   const fetch = async (url) => url.endsWith("release-manifest.json") ? Buffer.from(JSON.stringify(manifest)) : bytes;
   let output;
   const downloaded = await downloadRelease(selected, "python3", fetch, async (command, args) => {
     assert.equal(command, "python3"); output = args[args.indexOf("--output") + 1];
-    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode-token-usage-statusbar"), version: "1.4.0" };
+    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode_speed"), version: "1.4.0" };
   });
   assert.ok(fs.existsSync(downloaded.directory)); downloaded.cleanup(); assert.equal(fs.existsSync(downloaded.directory), false);
   assert.throws(() => validateManifest({ ...manifest, repository: "attacker/repo" }, selected), /不一致/);
@@ -239,31 +239,31 @@ test("unpack result paths compare by resolved identity, tolerating Windows 8.3 s
   // 两侧字符串不等但指向同一目录。用 junction/symlink 别名作为「另一字符串形态」的可移植模拟。
   const unpackViaAlias = async (command, args) => {
     const output = args[args.indexOf("--output") + 1];
-    fs.mkdirSync(path.join(output, "plugins", "zcode-token-usage-statusbar"), { recursive: true });
+    fs.mkdirSync(path.join(output, "plugins", "zcode_speed"), { recursive: true });
     const alias = path.join(path.dirname(output), "marketplace-aliased");
     fs.symlinkSync(output, alias, "junction");
     return { ok: true, version: f.selected.version, marketplaceRoot: alias,
-      pluginRoot: path.join(alias, "plugins", "zcode-token-usage-statusbar") };
+      pluginRoot: path.join(alias, "plugins", "zcode_speed") };
   };
   const downloaded = await downloadRelease(f.selected, "python3", f.fetch, unpackViaAlias);
-  assert.equal(fs.realpathSync(downloaded.pluginRoot), fs.realpathSync(path.join(downloaded.marketplaceRoot, "plugins", "zcode-token-usage-statusbar")));
+  assert.equal(fs.realpathSync(downloaded.pluginRoot), fs.realpathSync(path.join(downloaded.marketplaceRoot, "plugins", "zcode_speed")));
   downloaded.cleanup();
   assert.equal(fs.existsSync(downloaded.directory), false);
   // 归一化不得放宽校验：指向别处的解包结果即使真实存在也仍拒绝。
   const stray = path.join(parent, "stray"); fs.mkdirSync(stray, { recursive: true });
   await assert.rejects(downloadRelease(f.selected, "python3", f.fetch, async (command, args) => {
     const output = args[args.indexOf("--output") + 1];
-    fs.mkdirSync(path.join(output, "plugins", "zcode-token-usage-statusbar"), { recursive: true });
+    fs.mkdirSync(path.join(output, "plugins", "zcode_speed"), { recursive: true });
     return { ok: true, version: f.selected.version, marketplaceRoot: stray,
-      pluginRoot: path.join(stray, "plugins", "zcode-token-usage-statusbar") };
+      pluginRoot: path.join(stray, "plugins", "zcode_speed") };
   }), /无效/);
   // 两侧路径都不存在时回退严格字符串比较，捏造的路径（含靠 ../ 折叠伪装期望值的写法）不得借归一化混入。
-  const expectedPlugin = (output) => path.join(output, "plugins", "zcode-token-usage-statusbar");
+  const expectedPlugin = (output) => path.join(output, "plugins", "zcode_speed");
   const ghosts = [
     (output) => ({ marketplaceRoot: path.join(path.dirname(output), "ghost"),
       pluginRoot: expectedPlugin(output) }),
     (output) => ({ marketplaceRoot: output,
-      pluginRoot: expectedPlugin(output) + path.sep + ".." + path.sep + "zcode-token-usage-statusbar" }),
+      pluginRoot: expectedPlugin(output) + path.sep + ".." + path.sep + "zcode_speed" }),
   ];
   for (const ghost of ghosts) {
     await assert.rejects(downloadRelease(f.selected, "python3", f.fetch, async (command, args) => {
@@ -277,7 +277,7 @@ test("channel rejects untrusted repositories and duplicate known marketplace ide
     { source: "git", url: "https://github.com/owner/repo.git?ref=main" }, { source: "url", url: "https://github.com/owner/repo" }]) {
     assert.throws(() => channel(fixture(t, source)), /仅支持已注册的 GitHub\/GitCode 仓库来源/);
   }
-  const home = fixture(t, { source: "github", repo: "ByteRax/zcode-token-usage-statusbar" });
+  const home = fixture(t, { source: "github", repo: "ByteRax/zcode_speed" });
   const file = path.join(home, ".zcode", "cli", "plugins", "known_marketplaces.json");
   const record = JSON.parse(fs.readFileSync(file)).marketplaces[0];
   for (const duplicate of [record, { name: "zusage-marketplace", source: record.source }]) {
@@ -286,7 +286,7 @@ test("channel rejects untrusted repositories and duplicate known marketplace ide
   }
 });
 test("release selection paginates and refuses ambiguous pagination, absent formal releases and fetch failures", async () => {
-  const repo = "ByteRax/zcode-token-usage-statusbar", calls = [];
+  const repo = "ByteRax/zcode_speed", calls = [];
   const first = Array.from({ length: 100 }, () => ({ tag_name: "fixture-screenshot", draft: false, prerelease: false }));
   first[0] = release("1.9.0");
   const selected = await checkRelease(repo, compareVersions, async (url, limit) => {
@@ -347,7 +347,7 @@ test("download failures never unpack invalid data and clean only their temporary
       directory = path.dirname(archive); assert.ok(fs.existsSync(archive));
       if (invalid === "throw") throw new Error("fixture unpack failed");
       return invalid === null ? null : { ok: true, version: f.selected.version, marketplaceRoot: output,
-        pluginRoot: path.join(output, "plugins", "zcode-token-usage-statusbar"), ...invalid };
+        pluginRoot: path.join(output, "plugins", "zcode_speed"), ...invalid };
     }), /无效|fixture unpack failed/);
     assert.equal(fs.existsSync(directory), false); assert.deepEqual(fs.readdirSync(parent), ["keep"]);
   }
@@ -407,7 +407,7 @@ test("download publishes download start, byte progress and verify stage before u
   const downloaded = await downloadRelease(f.selected, "python3", fetch, async (command, args) => {
     unpacked = true; assert.deepEqual(stages[stages.length - 1], { stage: "verify" }, "verify published before unpack");
     const output = args[args.indexOf("--output") + 1];
-    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode-token-usage-statusbar"), version: f.selected.version };
+    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode_speed"), version: f.selected.version };
   }, (progress) => stages.push(progress));
   downloaded.cleanup();
   assert.ok(unpacked);
@@ -420,17 +420,17 @@ test("download publishes download start, byte progress and verify stage before u
   // 回调缺省或抛错前的旧调用形态保持可用
   const plain = await downloadRelease(f.selected, "python3", f.fetch, async (command, args) => {
     const output = args[args.indexOf("--output") + 1];
-    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode-token-usage-statusbar"), version: f.selected.version };
+    return { ok: true, marketplaceRoot: output, pluginRoot: path.join(output, "plugins", "zcode_speed"), version: f.selected.version };
   });
   plain.cleanup();
 });
 
 test("catalogChannel separates Release-pinned catalogs from source checkouts", () => {
-  const catalog = (source) => ({ name: "zusage-marketplace", plugins: [{ name: "zcode-token-usage-statusbar", source }] });
+  const catalog = (source) => ({ name: "zusage-marketplace", plugins: [{ name: "zcode_speed", source }] });
   assert.equal(catalogChannel(catalog({ source: "url", type: "zip",
-    url: "https://github.com/ByteRax/zcode-token-usage-statusbar/releases/download/v1.5.2/x.zip" })), "release");
-  assert.equal(catalogChannel(catalog("./plugins/zcode-token-usage-statusbar")), "source");
-  assert.equal(catalogChannel(catalog({ source: "git", url: "https://github.com/ByteRax/zcode-token-usage-statusbar" })), "source");
+    url: "https://github.com/ByteRax/zcode_speed/releases/download/v1.5.2/x.zip" })), "release");
+  assert.equal(catalogChannel(catalog("./plugins/zcode_speed")), "source");
+  assert.equal(catalogChannel(catalog({ source: "git", url: "https://github.com/ByteRax/zcode_speed" })), "source");
   assert.equal(catalogChannel(null), "unknown");
   assert.equal(catalogChannel({ plugins: [] }), "unknown");
   assert.equal(catalogChannel({ plugins: [{ name: "other", source: { source: "url", type: "zip" } }] }), "unknown");
@@ -442,16 +442,16 @@ function writeCatalog(home, catalog) {
   fs.writeFileSync(path.join(dir, "marketplace.json"), typeof catalog === "string" ? catalog : JSON.stringify(catalog));
 }
 test("readChannel routes repository sources whose cached catalog points at source code to the market channel", (t) => {
-  const entry = (source) => ({ name: "zusage-marketplace", plugins: [{ name: "zcode-token-usage-statusbar", version: "1.5.2", source }] });
-  const sourceCatalog = entry("./plugins/zcode-token-usage-statusbar");
-  const releaseCatalog = entry({ source: "url", type: "zip", url: "https://github.com/ByteRax/zcode-token-usage-statusbar/releases/download/v1.5.2/x.zip" });
-  const github = { source: "github", repo: "ByteRax/zcode-token-usage-statusbar" };
-  const gitcode = { source: "git", url: "https://gitcode.com/tanranran/zcode-token-usage-statusbar.git" };
+  const entry = (source) => ({ name: "zusage-marketplace", plugins: [{ name: "zcode_speed", version: "1.5.2", source }] });
+  const sourceCatalog = entry("./plugins/zcode_speed");
+  const releaseCatalog = entry({ source: "url", type: "zip", url: "https://github.com/ByteRax/zcode_speed/releases/download/v1.5.2/x.zip" });
+  const github = { source: "github", repo: "ByteRax/zcode_speed" };
+  const gitcode = { source: "git", url: "https://gitcode.com/tanranran/zcode_speed.git" };
   const pick = (c) => ({ kind: c.kind, flavor: c.flavor, repository: c.repository });
   let home = fixture(t, github); writeCatalog(home, sourceCatalog);
-  assert.deepEqual(pick(channel(home)), { kind: "market", flavor: "github", repository: "ByteRax/zcode-token-usage-statusbar" });
+  assert.deepEqual(pick(channel(home)), { kind: "market", flavor: "github", repository: "ByteRax/zcode_speed" });
   home = fixture(t, gitcode); writeCatalog(home, sourceCatalog);
-  assert.deepEqual(pick(channel(home)), { kind: "market", flavor: "gitcode", repository: "tanranran/zcode-token-usage-statusbar" });
+  assert.deepEqual(pick(channel(home)), { kind: "market", flavor: "gitcode", repository: "tanranran/zcode_speed" });
   // Release 清单、缓存缺失、缓存损坏、市场事务进行中：都保持 release 渠道，由后续 Release 流程报出准确原因
   home = fixture(t, github); writeCatalog(home, releaseCatalog);
   assert.equal(channel(home).kind, "release");

@@ -20,7 +20,7 @@ import symlink_support  # noqa: E402
 spec = importlib.util.spec_from_file_location("release_tool_test", ROOT / "release_tool.py")
 tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tool)
-REPO = "ByteRax/zcode-token-usage-statusbar"
+REPO = "ByteRax/zcode_speed"
 
 # An executable gh stub; all GitHub calls below are isolated and have no network access.
 GH_STUB = r'''#!/usr/bin/env python3
@@ -67,7 +67,7 @@ if args[0] == "api":
         emit([[release(state["draft"])]] if "draft" in state else
              [[{"tag_name": "v1.2.3", "draft": True}]] if mode == "exists" else [[]])
     else:
-        emit({"full_name": "ByteRax/zcode-token-usage-statusbar", "permissions": {"push": mode != "readonly"}})
+        emit({"full_name": "ByteRax/zcode_speed", "permissions": {"push": mode != "readonly"}})
 elif args[:2] == ["release", "create"]:
     state["draft"] = True
     state["body"] = pathlib.Path(args[args.index("--notes-file") + 1]).read_bytes().decode("utf-8")
@@ -128,7 +128,7 @@ class ReleaseToolTests(unittest.TestCase):
         self.git("add", ".")
         self.git("commit", "--quiet", "-m", "fixture")
         self.git("tag", "v1.2.3")
-        self.git("remote", "add", "origin", "https://github.com/xhwxt/zcode-token-usage-statusbar.git")
+        self.git("remote", "add", "origin", "https://github.com/xhwxt/zcode_speed.git")
         self.git("remote", "add", "writable", "git@github.com:" + REPO + ".git")
         (self.base / "head").write_text(self.git("rev-parse", "HEAD").strip())
         bin_dir = self.base / "bin"
@@ -572,7 +572,7 @@ with mock.patch.object(tool, "preflight", return_value="0" * 40):
     for notes in cases:
         assert len(notes.encode("utf-8")) <= tool.MAX_MANIFEST
         notes_file.write_text(notes, encoding="utf-8")
-        plan = tool.publish(asset.parent, "ByteRax/zcode-token-usage-statusbar", asset, manifest,
+        plan = tool.publish(asset.parent, "ByteRax/zcode_speed", asset, manifest,
                             notes_file=notes_file)
         assert plan["dryRun"] and plan["notes"] == notes
 print("bounded unclosed notes completed")
@@ -898,7 +898,7 @@ print("bounded unclosed notes completed")
     def gitcode_stub(self, token_sentinel, *, existing=False, zip_host="gitcode.com", fail=None):
         # Fake GitCode API/OBS/download surface; records calls and never touches the network.
         state = {"created": [], "puts": [], "release": None}
-        tag, git_repo = "v1.2.3", "tanranran/zcode-token-usage-statusbar"
+        tag, git_repo = "v1.2.3", "tanranran/zcode_speed"
         zip_name, manifest_name = self.asset.name, self.manifest.name
         files = {zip_name: self.asset.read_bytes(), manifest_name: self.manifest.read_bytes()}
 
@@ -967,7 +967,7 @@ print("bounded unclosed notes completed")
                 put_patch:
             plan = tool.publish(self.root, REPO, self.asset, self.manifest, approved,
                                 REPO + "/v1.2.3", notes_file=self.notes_file,
-                                gitcode_repo="tanranran/zcode-token-usage-statusbar")
+                                gitcode_repo="tanranran/zcode_speed")
         return plan, state
 
     def test_gitcode_mirror_creates_release_uploads_and_writes_catalog(self):
@@ -1010,7 +1010,7 @@ print("bounded unclosed notes completed")
             os.environ.pop("GITCODE_TOKEN", None)
             tool.publish(self.root, REPO, self.asset, self.manifest, True, REPO + "/v1.2.3",
                          notes_file=self.notes_file,
-                         gitcode_repo="tanranran/zcode-token-usage-statusbar")
+                         gitcode_repo="tanranran/zcode_speed")
         self.assert_no_publish()
 
     def test_gitcode_mirror_unexpected_asset_host_fails_closed(self):

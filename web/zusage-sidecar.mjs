@@ -100,7 +100,7 @@ async function verifySessionCookie(header) {
  *  两种布局都自定位：仓库内 web/ 的上一级就是仓库根；部署时 web/ 常与仓库目录并列。 */
 const PLUGIN_DIR = process.env.ZUSAGE_PLUGIN_DIR || resolvePluginDir();
 function resolvePluginDir() {
-  const candidates = [resolve(HERE, '..'), resolve(HERE, '../zcode-token-usage-statusbar')];
+  const candidates = [resolve(HERE, '..'), resolve(HERE, '../zcode_speed')];
   for (const dir of candidates) {
     if (existsSync(join(dir, 'zusage.py'))) return dir;
   }
