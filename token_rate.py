@@ -19,11 +19,12 @@
   ZUSAGE_RATE_STATE_FILE=/path           指定钩子状态文件（测试接缝）
 
 只读打开 WAL 数据库，不影响运行中的客户端。
-速率口径（2026-10-14 据真库 raw_usage_json 与思考段时间分布裁决）：
+速率口径（2026-11-01 起，单段读数改为 Leoid decode 口径）：
   分子 = output_tokens（ZCode 的该列已包含思考 token，provider 原生 totalTokens
   = input + output 不另加 reasoning，不能再相加）；
-  分母 = 纯生成时长——无思考段 completed_at − first_token_at，含思考段默认
-  completed_at − started_at（思考 token 在 first_token_at 之前流出，窗口须前移）；
+  「上轮」单段分母 = completed_at − first_token_at，不把等待/推理前处理摊进生成速度；
+  历史聚合和整轮加权仍用保守窗口——无思考段 completed_at − first_token_at，含思考段
+  默认 completed_at − started_at（思考 token 在 first_token_at 之前流出，窗口须前移）；
   「首块即落章」provider 例外（first_token_covers：ttft 不随推理量增长的供应商，
   思考在首字后随输出流出，首字窗口已含思考）改用 completed_at − first_token_at。
   按段累加，段间工具等待不计入。Claude 系列不单独上报思考 token（reasoning_tokens
@@ -438,12 +439,15 @@ def format_line(r):
     l = r.get("latest")
     if not l:
         return "暂无已完成的模型请求"
+    # Leoid 口径：单段真实生成窗口从 first token 起算；缺首字才退回保守窗口。
+    rate = l.get("decodeTokPerSec") if l.get("decodeTokPerSec") is not None else l["tokPerSec"]
+    gen_ms = l.get("decodeGenMs") if l.get("decodeTokPerSec") is not None else l["genMs"]
     parts = [
-        f"⚡ {l['tokPerSec'] if l['tokPerSec'] is not None else '-'} token/s(上轮)",
+        f"⚡ {rate if rate is not None else '-'} token/s(上轮)",
         f"首字 {_sec(l['ttftMs'])}s",
         f"输出 {fmt_num(l['outputTokens'])}"
         f"{'(含 ' + fmt_num(l['reasoningTokens']) + ' 思考)' if l['reasoningTokens'] else ''}"
-        f" token / 生成 {_sec(l['genMs'])}s",
+        f" token / 生成 {_sec(gen_ms)}s",
     ]
     s = r.get("session")
     if s:

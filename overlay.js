@@ -3433,10 +3433,10 @@
           ttRow(L("档位", "Band"), tpsBandText(tband)) +
           ttRow(L("口径", "Basis"), L(sessAvg
             ? "会话全部已完成请求：Σ输出（含思考）÷ Σ生成耗时，工具等待不计，不含子代理"
-            : "输出 tokens（含思考）÷ 生成耗时",
+            : "输出 tokens（含思考）÷（完成时刻 − 首 token 时刻）",
             sessAvg
             ? "all completed requests of this session: Σoutput (thinking incl.) ÷ Σgeneration time, tool waits excluded, sub-agents excluded"
-            : "output tokens (thinking incl.) ÷ generation time")) +
+            : "output tokens (thinking incl.) ÷ (finished at − first token at)")) +
           (!sessAvg && (last.startedAt || last.endedAt)
             ? ttRowPin(L("时间范围", "Time span"),
                 (last.startedAt ? fmtStart(last.startedAt) : "—") + " - " +
@@ -6619,10 +6619,10 @@
         }
         out += tpsRowHtml(L("口径", "Basis"), L(v.sessAvg
           ? "会话全部已完成请求：Σ输出（含思考）÷ Σ生成耗时，工具等待不计，不含子代理"
-          : "输出 tokens（含思考）÷ 生成耗时",
+          : "输出 tokens（含思考）÷（完成时刻 − 首 token 时刻）",
           v.sessAvg
           ? "all completed requests of this session: Σoutput (thinking incl.) ÷ Σgeneration time, tool waits excluded, sub-agents excluded"
-          : "output tokens (thinking incl.) ÷ generation time"));
+          : "output tokens (thinking incl.) ÷ (finished at − first token at)"));
         if (!v.sessAvg && (last.startedAt || last.endedAt)) {   // 时间范围只对「最近一段」标题有意义（v181 补修）
           out += tpsRowHtml(L("时间范围", "Time span"),
             (last.startedAt ? fmtStart(last.startedAt) : "—") + " - " + (last.endedAt ? fmtStart(last.endedAt) : "—"));

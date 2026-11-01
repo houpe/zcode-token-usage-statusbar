@@ -861,9 +861,16 @@ def _row_gen_ms(r, covers=frozenset()):
     return gen_ms
 
 
+def _decode_gen_ms(r):
+    """单段 decode 窗口：completed_at − first_token_at（Leoid 口径）。
+    与 _row_gen_ms 的历史聚合口径不同；思考/等待时段不参与该读数。"""
+    ft, ct = r["first_token_at"], r["completed_at"]
+    return ct - ft if ft and ct and ct > ft else None
+
+
 def _rate_sample(row, covers=frozenset()):
     if row and (row["output_tokens"] or 0) > 0:
-        gen_ms = _row_gen_ms(row, covers)
+        gen_ms = _decode_gen_ms(row)
         if gen_ms and _TPS_MIN_GEN_MS <= gen_ms < _TPS_MAX_GEN_MS:
             return {"tps": round(row["output_tokens"] / (gen_ms / 1000), 1),
                     "startedAt": row["started_at"] or 0, "endedAt": row["completed_at"] or 0}

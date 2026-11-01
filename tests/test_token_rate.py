@@ -487,9 +487,9 @@ class TestLatestLine(RateTestBase):
         r = self.run_rate(state=self.state)
         lines = r.stdout.strip().splitlines()
         self.assertEqual(len(lines), 2)
-        self.assertIn("160 token/s(上轮)", lines[0])  # 最近完成的 b2（含思考段窗口 5.0s）
+        self.assertIn("320 token/s(上轮)", lines[0])  # 最近完成的 b2（Leoid decode 窗口 2.5s）
         self.assertIn("首字 2.0s", lines[0])
-        self.assertIn("输出 800(含 200 思考) token / 生成 5.0s", lines[0])
+        self.assertIn("输出 800(含 200 思考) token / 生成 2.5s", lines[0])
         self.assertIn("近4次均 148.3 / 峰 200 token/s", lines[0])
         self.assertIn("累计 3.5k token", lines[0])
         self.assertIn("请求 4 次", lines[1])  # 只数 main_turn
@@ -533,7 +533,7 @@ class TestPromptSubmitHook(RateTestBase):
         self.assertEqual(inner["hookEventName"], "UserPromptSubmit")
         ctx = inner["additionalContext"]
         self.assertIn("【内部背景·勿展示】上一条回复:", ctx)
-        self.assertIn("160 token/s(上轮)", ctx)
+        self.assertIn("320 token/s(上轮)", ctx)
         # 统计行已确定性渲染（overlay.js 桥接）：不再向模型下达任何统计指令
         for banned in ("本轮统计指令", "运行一次:", "Markdown 引用块",
                        "token_rate.py", "--turn", "--current", "--session"):
@@ -845,6 +845,14 @@ create table model_usage (id text primary key, session_id text, turn_id text, qu
         no_pid = dict(base)
         del no_pid["provider_id"]
         self.assertEqual(self.us.request_stats(no_pid, covers=frozenset({"prov-covers"}))["genMs"], 8000)
+
+    def test_single_segment_decode_rate_ignores_conservative_cover_window(self):
+        base = {"output_tokens": 500, "reasoning_tokens": 300, "completed_at": 9000,
+                "started_at": 1000, "first_token_at": 4000, "model_id": "glm-x",
+                "time_to_first_token_ms": 3000, "provider_id": "prov-before"}
+        item = self.us.request_stats(base)
+        self.assertEqual(item["decodeGenMs"], 5000)
+        self.assertEqual(item["decodeTokPerSec"], 100.0)
 
     def test_to_item_passes_covers_through_to_sqlite_rows(self):
         self.con.execute("insert into model_usage values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",

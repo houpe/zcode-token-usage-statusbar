@@ -44,6 +44,11 @@ def request_stats(row, covers=frozenset()):
         reason = "noOutput"
     rated = reason is None
     ttft = row["time_to_first_token_ms"]
+    decode_ms = (completed - row["first_token_at"]
+                 if _number(completed) and _number(row["first_token_at"])
+                 and completed > row["first_token_at"] else None)
+    decode_rated = (decode_ms is not None and MIN_GEN_MS <= decode_ms < MAX_GEN_MS
+                    and _number(output) and output > 0)
     return {
         "model": row["model_id"],
         "outputTokens": output,
@@ -51,6 +56,8 @@ def request_stats(row, covers=frozenset()):
         "ttftMs": ttft if _number(ttft) and ttft >= 0 else None,
         "genMs": duration,
         "tokPerSec": round1(output / duration * 1000) if rated else None,
+        "decodeGenMs": decode_ms,
+        "decodeTokPerSec": round1(output / decode_ms * 1000) if decode_rated else None,
         "completedAt": completed,
         "ratedOutput": output if rated else 0,
         "unratedOutput": 0 if rated else output,

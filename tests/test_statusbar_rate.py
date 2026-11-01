@@ -60,13 +60,13 @@ class StatusbarRateTests(unittest.TestCase):
                      13661 if first_token else None, 10, 1074, reasoning, 0, 0, 1084, 0, 0, 0))
         return zusage._session_snapshot(con, "s", {"context_window": 200000})["last"]["tps"]
 
-    def test_claude_unreported_thinking_counts_from_request_start(self):
-        # 回归：按首字窗口曾显示 1074 ÷ 1.426s = 753.2 t/s。
-        self.assertEqual(self.tps("claude-opus-5-5"), 71.2)
+    def test_single_segment_uses_decode_window_even_with_thinking(self):
+        # Leoid 口径：单段读数不把 first token 前的等待/推理摊进分母。
+        self.assertEqual(self.tps("claude-opus-5-5"), 753.2)
+        self.assertEqual(self.tps("gpt-6.1-sol", reasoning=224), 753.2)
 
     def test_window_rule_for_other_models_is_unchanged(self):
-        self.assertEqual(self.tps("GLM-5.3"), 753.2)                    # 无思考：首字窗口
-        self.assertEqual(self.tps("gpt-6.1-sol", reasoning=224), 71.2)  # 上报思考：整段
+        self.assertEqual(self.tps("GLM-5.3"), 753.2)                    # 无思考：首 token 窗口
         # 缺首字且无更早的有效请求可回退：不可信，返回 0（2026-10-16 修复前曾退化用总耗时
         # 硬算，等待期被当成生成期；真库 11 token/6.173s 的尾巴请求曾借此显示 1.8 t/s）
         self.assertEqual(self.tps("GLM-5.3", first_token=False), 0)
