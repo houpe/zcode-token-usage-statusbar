@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import secrets
 import subprocess
 import sys
@@ -413,7 +414,8 @@ def restore_last():
 
 def zcode_pids():
     try:
-        output = subprocess.check_output(["ps", "-axo", "pid=,comm="], text=True)
+        ps = "/bin/ps" if sys.platform == "darwin" else "ps"
+        output = subprocess.check_output([ps, "-axo", "pid=,comm="], text=True)
     except (OSError, subprocess.SubprocessError):
         return []
     pids = []
@@ -429,7 +431,12 @@ def is_zcode_running():
 
 
 def kill_zcode():
-    import signal
+    if sys.platform == "darwin":
+        try:
+            subprocess.run(["/usr/bin/osascript", "-e", 'tell application id "dev.zcode.app" to quit'],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+        except (OSError, subprocess.SubprocessError):
+            pass
     pids = zcode_pids()
     for pid in pids:
         try: os.kill(pid, signal.SIGTERM)
@@ -444,7 +451,8 @@ def kill_zcode():
 
 
 def launch_zcode():
-    for args in (["open", "-b", "dev.zcode.app"], ["open", "-a", "ZCode"]):
+    open_cmd = "/usr/bin/open" if sys.platform == "darwin" else "open"
+    for args in ([open_cmd, "-b", "dev.zcode.app"], [open_cmd, "-a", "ZCode"]):
         if subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
             return
     raise RuntimeError("启动 ZCode 失败")

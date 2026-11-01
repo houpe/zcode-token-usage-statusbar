@@ -135,7 +135,41 @@ class ZcasPythonTest(unittest.TestCase):
                  calls.append(args), results[len(calls) - 1]
              )[1]):
             zcas.launch_zcode()
-        self.assertEqual(calls, [["open", "-b", "dev.zcode.app"], ["open", "-a", "ZCode"]])
+        self.assertEqual(calls, [["/usr/bin/open", "-b", "dev.zcode.app"], ["/usr/bin/open", "-a", "ZCode"]])
+
+    def test_macos_process_commands_do_not_depend_on_inherited_path(self):
+        calls = []
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas.subprocess, "check_output", side_effect=lambda args, **_: (
+                 calls.append(args), "123 ZCode\n"
+             )[1]):
+            self.assertEqual(zcas.zcode_pids(), [123])
+        self.assertEqual(calls, [["/bin/ps", "-axo", "pid=,comm="]])
+
+    def test_macos_quit_uses_bundle_id_before_signal_fallback(self):
+        run_calls = []
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas.subprocess, "run", side_effect=lambda args, **_: (
+                 run_calls.append(args), subprocess.CompletedProcess([], 0)
+             )[1]), \
+             mock.patch.object(zcas, "zcode_pids", side_effect=[[123], [123], [123], []]), \
+             mock.patch.object(zcas.time, "time", side_effect=[0, 0, 10, 20, 30]), \
+             mock.patch.object(zcas.time, "sleep"), \
+             mock.patch.object(zcas.os, "kill") as kill:
+            zcas.kill_zcode()
+        self.assertEqual(run_calls, [["/usr/bin/osascript", "-e", 'tell application id "dev.zcode.app" to quit']])
+        self.assertEqual(kill.call_args_list,
+                         [mock.call(123, zcas.signal.SIGTERM), mock.call(123, zcas.signal.SIGKILL)])
+
+    def test_macos_quit_timeout_falls_back_to_signals(self):
+        with mock.patch.dict("os.environ", self.env), \
+             mock.patch.object(zcas.subprocess, "run", side_effect=subprocess.TimeoutExpired("osascript", 15)), \
+             mock.patch.object(zcas, "zcode_pids", side_effect=[[123], [], []]), \
+             mock.patch.object(zcas.time, "time", side_effect=[0, 0, 1]), \
+             mock.patch.object(zcas.time, "sleep"), \
+             mock.patch.object(zcas.os, "kill") as kill:
+            zcas.kill_zcode()
+        self.assertEqual(kill.call_args_list, [mock.call(123, zcas.signal.SIGTERM)])
 
     def test_quota_uses_coding_plan_limits(self):
         with mock.patch.dict("os.environ", self.env):
