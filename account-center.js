@@ -52,6 +52,14 @@
     } catch (error) { }
     return result;
   }
+  function readProviderPreference() {
+    try { return localStorage.getItem("zusage3.accountProvider") === "bigmodel" ? "bigmodel" : "zai"; }
+    catch (error) { return "zai"; }
+  }
+  function rememberProvider(provider) {
+    try { localStorage.setItem("zusage3.accountProvider", provider === "bigmodel" ? "bigmodel" : "zai"); }
+    catch (error) { }
+  }
   function request(action, extra) {
     return new Promise(function (resolve, reject) {
       if (typeof window.__zusagePluginRequest !== "function") {
@@ -129,7 +137,7 @@ function quotaBlock(quota, className) {
       ".zcas-account{display:flex;align-items:center;gap:8px}.zcas-account-main{flex:1;min-width:0}.zcas-account-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}" +
       ".zcas-current-badge{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--color-brand,#6d8dff);font-size:11px;font-weight:650;color:var(--color-on-brand,#101218)}" +
       ".zcas-empty{padding:16px 0;text-align:center;color:var(--color-foreground-subtle,#a7adb8)}" +
-      ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:9px}.zcas-form label{display:grid;gap:4px;color:var(--color-foreground-subtle,#b4bac5);font-size:12px}" +
+      ".zcas-form{padding:12px 0;border-top:1px solid var(--color-border,rgba(127,127,127,.18));display:grid;gap:9px}.zcas-form-title{margin:0;color:var(--color-foreground,#f3f4f6);font-size:13px;font-weight:650}.zcas-form label{display:grid;gap:4px;color:var(--color-foreground-subtle,#b4bac5);font-size:12px}.zcas-form .zcas-label{white-space:nowrap}" +
       ".zcas-form input,.zcas-form select,.zcas-form textarea{width:100%;border:1px solid var(--color-input-border,rgba(127,127,127,.32));border-radius:6px;background:var(--color-input,#191a1c);color:var(--color-foreground,#f3f4f6);font:inherit;padding:7px 8px;outline:none}" +
       ".zcas-form textarea{min-height:68px;resize:vertical}.zcas-form input:focus,.zcas-form select:focus,.zcas-form textarea:focus,.zcas-command:focus-visible,.zcas-icon-btn:focus-visible,.zusage-account-chip:focus-visible{outline:2px solid var(--color-input-border-focused,#8aa4ff);outline-offset:2px}" +
       ".zcas-form-row{display:flex;gap:8px;justify-content:flex-end}.zcas-form-note{margin:0;color:var(--color-foreground-subtle,#a7adb8);font-size:12px}" +
@@ -199,7 +207,11 @@ function quotaBlock(quota, className) {
       var save = iconButton("save", "保存当前");
       save.onclick = function () { captureOpen = !captureOpen; oauth = null; render(); };
       var add = iconButton("plus", "添加账号");
-      add.onclick = function () { oauth = { accountId: "", provider: "zai", started: false }; captureOpen = false; render(); };
+      add.onclick = function () {
+        var provider = readProviderPreference();
+        oauth = { accountId: "", provider: provider, started: false };
+        captureOpen = false; render();
+      };
       var spacer = el("span", "zcas-spacer");
       var refresh = iconButton("refresh", "刷新全部额度");
       refresh.onclick = function () { refreshQuotas(); };
@@ -280,6 +292,7 @@ function quotaBlock(quota, className) {
       var reauth = iconButton("key", "重新授权");
       reauth.onclick = function () {
         var provider = String(account.provider || "").indexOf("bigmodel") >= 0 ? "bigmodel" : "zai";
+        rememberProvider(provider);
         oauth = { accountId: account.id, provider: provider, started: false }; captureOpen = false; render();
       };
       actions.appendChild(reauth);
@@ -303,7 +316,7 @@ function quotaBlock(quota, className) {
     var form = el("div", "zcas-form");
     var name = el("input"); name.placeholder = "账号名称（默认使用邮箱）";
     var note = el("input"); note.placeholder = "备注（可选）";
-    form.appendChild(labeled("保存当前 ZCode 登录态", name));
+    form.appendChild(labeled("当前登录态", name));
     form.appendChild(labeled("备注", note));
     var row = el("div", "zcas-form-row");
     var cancel = command("取消"); cancel.onclick = function () { captureOpen = false; render(); };
@@ -319,7 +332,8 @@ function quotaBlock(quota, className) {
   }
 
   function labeled(text, control) {
-    var label = el("label", "", text);
+    var label = el("label", "zcas-label");
+    label.appendChild(el("span", "", text));
     label.appendChild(control);
     return label;
   }
@@ -331,15 +345,17 @@ function quotaBlock(quota, className) {
     [["zai", "z.ai（全球）"], ["bigmodel", "BigModel（中国）"]].forEach(function (item) {
       var option = el("option", "", item[1]); option.value = item[0]; provider.appendChild(option);
     });
-    provider.value = oauth.provider === "bigmodel" ? "bigmodel" : "zai";
+    provider.value = (oauth.provider || readProviderPreference()) === "bigmodel" ? "bigmodel" : "zai";
+    provider.addEventListener("change", function () { rememberProvider(provider.value); });
     provider.disabled = !!oauth.accountId || oauth.started;
     var name = el("input"); name.placeholder = "账号名称（可选）"; name.disabled = oauth.started;
-    form.appendChild(labeled(title, provider));
-    if (!oauth.accountId) form.appendChild(labeled("账号名称", name));
+    form.appendChild(el("p", "zcas-form-title", title));
+    form.appendChild(labeled("渠道", provider));
+    if (!oauth.accountId) form.appendChild(labeled("名称", name));
     var callback = el("textarea");
     callback.placeholder = "旧版回调链接（可选；一般留空自动等待）";
     if (oauth.started) {
-      form.appendChild(labeled("登录完成后粘贴回调链接", callback));
+      form.appendChild(labeled("旧版回调", callback));
       var note = el("p", "zcas-form-note", "在浏览器完成登录后，点击「完成授权」；插件会自动等待授权结果。");
       form.appendChild(note);
     }

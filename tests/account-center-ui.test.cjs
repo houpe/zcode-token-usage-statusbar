@@ -123,6 +123,21 @@ test("oauth pending provider survives renderer reload", () => {
   assert.match(source, /started: true/);
 });
 
+test("new account form remembers the chosen provider", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /readProviderPreference/);
+  assert.match(source, /zusage3\.accountProvider/);
+  assert.match(source, /provider\.addEventListener\("change"/);
+});
+
+test("oauth form labels stay compact and readable", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
+  assert.match(source, /zcas-form-title/);
+  assert.match(source, /zcas-form \.zcas-label\{white-space:nowrap\}/);
+  assert.match(source, /labeled\("渠道", provider\)/);
+  assert.match(source, /labeled\("名称", name\)/);
+});
+
 test("reauthorization maps stored provider slots to login channels", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "account-center.js"), "utf8");
   assert.match(source, /indexOf\("bigmodel"\) >= 0 \? "bigmodel" : "zai"/);
